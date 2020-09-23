@@ -82,6 +82,8 @@ static token_type_t get_token_type(std::string s) {
         return COLON;
     } else if (s == "=") {
         return ASSIGN;
+    } else if (s == "==") {
+        return EQL;
     } else if (s == ";") {
         return SEMICN;
     } else if (s == ",") {
