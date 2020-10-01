@@ -4,7 +4,9 @@
 
 #include <iostream>
 #include <regex>
+#include <cassert>
 #include "tokenizer.h"
+#include "utils.h"
 
 #pragma clang diagnostic ignored "-Wc99-designator"
 const char* const symbol_names[] = {
@@ -50,8 +52,8 @@ const char* const symbol_names[] = {
         [RBRACE]="RBRACE",
 };
 
-void token::pretty_print(std::ostream& stream) {
-    stream << symbol_names[this->type] << " " << this->text << std::endl;
+std::string token::pretty_print() const {
+    return std::string(token_name(this->type)) + " " + this->text + "\n";
 }
 
 std::string token::type_name() {
@@ -175,4 +177,9 @@ std::vector<token> tokenize(std::string orig) {
     }
     
     return result;
+}
+
+const char* token_name(token_type_t type) {
+    assert(type < COUNT_OF(symbol_names));
+    return symbol_names[type];
 }

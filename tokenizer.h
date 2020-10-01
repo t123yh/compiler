@@ -18,7 +18,7 @@ enum token_type_t
     LBRACK, RBRACK, LBRACE, RBRACE
 };
 
-extern const char* const symbol_names[];
+const char* token_name(token_type_t);
 
 struct token
 {
@@ -29,7 +29,7 @@ struct token
     
     std::string type_name();
     
-    void pretty_print(std::ostream& stream);
+    std::string pretty_print() const;
 };
 
 std::vector<token> tokenize(std::string orig);

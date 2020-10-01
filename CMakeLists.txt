@@ -3,4 +3,4 @@ project(compiler)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(compiler main.cpp tokenizer.cpp tokenizer.h)
+add_executable(compiler main.cpp tokenizer.cpp parser.cpp parsing_failure.cpp)

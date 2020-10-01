@@ -2,6 +2,8 @@
 #include <string>
 #include <fstream>
 #include "tokenizer.h"
+#include "parser.h"
+#include "parser_program.h"
 
 int main() {
     std::ifstream t("testfile.txt");
@@ -12,9 +14,9 @@ int main() {
                     std::istreambuf_iterator<char>());
     
     auto result = tokenize(str);
-    std::ofstream fout("output.txt");
-    for (auto& t : result) {
-        t.pretty_print(fout);
-    }
+    
+    parsing_context ctx {.current = result.begin(), .end = result.end(), .debug_output = std::cout, .strategy = FINAL};
+    ctx.expect_one(program_parser());
+    
     return 0;
 }
