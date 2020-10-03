@@ -96,10 +96,10 @@ return_parser::return_type return_parser::parse(parsing_context &context) const 
 print_parser::return_type print_parser::parse(parsing_context &context) const {
     auto pt = std::unique_ptr<print_statement>(new print_statement);
     context.expect(token_parser<PRINTFTK>(), token_parser<LPARENT>());
-    if (context.match(token_parser<STRCON>(), token_parser<SEMICN>(), expression_parser())) {
+    if (context.match(token_parser<STRCON>(), token_parser<COMMA>(), expression_parser())) {
         pt->print_content = context.expect_one(token_parser<STRCON>());
         context.record("字符串");
-        context.expect(token_parser<SEMICN>());
+        context.expect(token_parser<COMMA>());
         pt->print_val = context.expect_one(expression_parser());
         pt->has_string = true;
         pt->has_val = true;
