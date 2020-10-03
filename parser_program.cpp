@@ -30,5 +30,6 @@ program_parser::return_type program_parser::parse(parsing_context &context) cons
         result.functions.push_back(std::move(func));
     }
     result.main_function = context.expect_one(main_function_parser());
+    context.record("程序");
     return result;
 }

@@ -7,6 +7,7 @@
 
 int main() {
     std::ifstream t("testfile.txt");
+    std::ofstream fout("output.txt");
     if (!t) {
         std::cerr << "Failed to open file!" << std::endl;
     }
@@ -15,7 +16,7 @@ int main() {
     
     auto result = tokenize(str);
     
-    parsing_context ctx {.current = result.begin(), .end = result.end(), .debug_output = std::cout, .strategy = FINAL};
+    parsing_context ctx {.current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL};
     volatile auto prog = ctx.expect_one(program_parser());
     
     return 0;
