@@ -93,11 +93,11 @@ var_def var_definition_with_init_parser::parse(parsing_context &context) const {
 std::vector<var_def>
 var_definition_without_init_parser::parse(parsing_context &context) const {
     std::vector<var_def> vs;
+    auto type = context.expect_one(token_parser<INTTK, CHARTK>())->type;
     while (true) {
         var_def v;
-        auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-        v.type = std::get<0>(idf)->type;
-        v.identifier = std::get<1>(idf);
+        v.type = type;
+        v.identifier = context.expect_one(token_parser<IDENFR>());
     
         // TODO: set dimension for v
         int dimen1 = -1, dimen2 = -1;
