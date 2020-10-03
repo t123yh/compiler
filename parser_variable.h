@@ -8,10 +8,10 @@
 #include "defs.h"
 #include "parser.h"
 
-struct constant_parser : public parser {
+struct typed_constant_parser : public parser {
     typedef int64_t return_type;
     var_def::type_t t;
-    constant_parser(var_def::type_t t);
+    typed_constant_parser(var_def::type_t t);
     return_type parse(parsing_context &context) const;
 };
 

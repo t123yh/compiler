@@ -5,7 +5,7 @@
 #include "parser_variable.h"
 #include "parser_const.h"
 
-constant_parser::return_type constant_parser::parse(parsing_context &context) const {
+typed_constant_parser::return_type typed_constant_parser::parse(parsing_context &context) const {
     int64_t val = 0;
     if (t == INTTK && context.match(integer_parser())) {
         val = context.expect_one(integer_parser());
@@ -19,7 +19,7 @@ constant_parser::return_type constant_parser::parse(parsing_context &context) co
     return val;
 }
 
-constant_parser::constant_parser(var_def::type_t t) : t(t) {
+typed_constant_parser::typed_constant_parser(var_def::type_t t) : t(t) {
 
 }
 
@@ -77,13 +77,13 @@ var_def var_definition_with_init_parser::parse(parsing_context &context) const {
     // TODO: Initial value
     if (dimen1 == -1 && dimen2 == -1) { // scalar
         v.array = var_def::SCALAR_VAR;
-        v.value = context.expect_one(constant_parser(v.type));
+        v.value = context.expect_one(typed_constant_parser(v.type));
     } else if (dimen2 == -1) { // 1d array
         v.array = var_def::ARRAY_1D;
-        volatile auto iv = context.expect_one(list_parser<constant_parser>(constant_parser(v.type), dimen1));
+        volatile auto iv = context.expect_one(list_parser<typed_constant_parser>(typed_constant_parser(v.type), dimen1));
     } else { // 2d array
         v.array = var_def::ARRAY_2D;
-        volatile auto iv = context.expect_one(list_parser<list_parser<constant_parser>>(list_parser<constant_parser>(constant_parser(v.type), dimen2), dimen1));
+        volatile auto iv = context.expect_one(list_parser<list_parser<typed_constant_parser>>(list_parser<typed_constant_parser>(typed_constant_parser(v.type), dimen2), dimen1));
     }
     
     context.record("变量定义及初始化");
