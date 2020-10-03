@@ -18,7 +18,7 @@ struct var_def
     
     enum type_t
     {
-        INT, CHAR
+        INT = 1, CHAR, VOID
     };
     
     arr_desc_t array;
@@ -26,5 +26,18 @@ struct var_def
     token_ptr identifier;
     int64_t value;
 };
+
+static inline var_def::type_t token2type(token_ptr tk) {
+    switch (tk->type) {
+        case INTTK:
+            return var_def::INT;
+        case CHARTK:
+            return var_def::CHAR;
+        case VOIDTK:
+            return var_def::VOID;
+        default:
+            return 0;
+    }
+}
 
 #endif //COMPILER_DEFS_H

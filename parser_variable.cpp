@@ -96,7 +96,7 @@ var_definition_without_init_parser::parse(parsing_context &context) const {
     while (true) {
         var_def v;
         auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-        v.type = std::get<0>(idf)->type == INTTK ? var_def::INT : var_def::CHAR;
+        v.type = token2type(std::get<0>(idf));
         v.identifier = std::get<1>(idf);
     
         // TODO: set dimension for v
