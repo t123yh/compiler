@@ -46,4 +46,14 @@ struct calling_parser : public parser {
     return_type parse(parsing_context &context) const;
 };
 
+struct function_parser : public parser {
+    typedef std::unique_ptr<function> return_type;
+    return_type parse(parsing_context &context) const;
+};
+
+struct main_function_parser : public parser {
+    typedef statement_block return_type;
+    return_type parse(parsing_context &context) const;
+};
+
 #endif //COMPILER_PARSER_FUNCTION_H

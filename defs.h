@@ -79,6 +79,34 @@ struct assignment_statement : public statement {
     std::unique_ptr<expression> da, db, val;
 };
 
+struct calling_statement : public statement {
+    std::unique_ptr<function_call_info> call_info;
+    calling_statement(std::unique_ptr<function_call_info>&& call_info) : call_info(std::move(call_info)) {}
+};
+
+struct empty_statement : public statement {
+
+};
+
+struct return_statement: public statement {
+    std::unique_ptr<expression> val;
+};
+
+struct print_statement: public statement {
+    bool has_string, has_val;
+    token_ptr print_content;
+    std::unique_ptr<expression> print_val;
+};
+
+struct scan_statement : public statement {
+    token_ptr identifier;
+};
+
+struct block_statement : public statement {
+    std::vector<std::unique_ptr<statement>> statements;
+    block_statement(std::vector<std::unique_ptr<statement>> && st) : statements(std::move(st)) {}
+};
+
 struct statement_block {
     std::vector<var_def> variables;
     std::vector<std::unique_ptr<statement>> statements;

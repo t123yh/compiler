@@ -22,9 +22,12 @@ decl_header_parser::return_type decl_header_parser::parse(parsing_context &conte
 
 parameter_list_parser::return_type parameter_list_parser::parse(parsing_context &context) const {
     std::vector<function_parameter> ret;
-    while (!context.match(token_parser<RPARENT>())) {
+    while (true) {
         auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
         ret.push_back({.type = token2type(std::get<0>(idf)), .name= std::get<1>(idf)});
+        if (!context.parse_if_match(token_parser<COMMA>())) {
+            break;
+        }
     }
     context.record("参数表");
     return ret;
@@ -85,4 +88,34 @@ arguments_parser::return_type arguments_parser::parse(parsing_context &context) 
     } while (context.parse_if_match(token_parser<COMMA>()));
     context.record("值参数表");
     return arg_list;
+}
+
+function_parser::return_type function_parser::parse(parsing_context &context) const {
+    std::unique_ptr<function> func = std::unique_ptr<function>(new function);
+    function_signature &sign = func->signature;
+    if (context.parse_if_match(token_parser<VOIDTK>())) {
+        sign.return_type = var_def::VOID;
+        sign.identifier = context.expect_one(token_parser<IDENFR>());
+    } else {
+        sign = context.expect_one(decl_header_parser());
+    }
+    
+    sign.parameters = std::get<1>(
+            context.expect(token_parser<LPARENT>(), parameter_list_parser(), token_parser<RPARENT>()));
+    
+    func->statements = std::get<1>(
+            context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
+    if (func->signature.return_type == var_def::VOID) {
+        context.record("无返回值函数定义");
+    } else {
+        context.record("有返回值函数定义");
+    }
+    return func;
+}
+
+main_function_parser::return_type main_function_parser::parse(parsing_context &context) const {
+    context.expect(token_parser<VOIDTK>(), token_parser<MAINTK>(), token_parser<LPARENT>(), token_parser<RPARENT>());
+    auto r = std::get<1>(context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
+    context.record("主函数");
+    return r;
 }

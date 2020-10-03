@@ -4,6 +4,7 @@
 
 #include "parser_program.h"
 #include "parser_variable.h"
+#include "parser_function.h"
 
 program_parser::return_type program_parser::parse(parsing_context &context) const {
     std::vector<var_def> global_symbol_table;
@@ -19,6 +20,11 @@ program_parser::return_type program_parser::parse(parsing_context &context) cons
             global_symbol_table.push_back(x);
         }
     }
-    std::cout << "asf";
+    
+    auto func = context.expect_one(function_parser());
+    if (context.strategy == FINAL) {
+        context.func_tab[func->signature.identifier->text] = func->signature.return_type != var_def::VOID;
+    }
+    volatile auto func2 = context.expect(main_function_parser());
     return {};
 }

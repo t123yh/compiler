@@ -8,11 +8,6 @@
 std::vector <var_def> const_description_parser::parse(parsing_context &context) const {
     std::vector<var_def> ret;
     
-    if (context.strategy == TRIAL) {
-        token_parser<CONSTTK>();
-        return ret;
-    }
-    
     ret = std::get<1>(context.expect(
             token_parser<CONSTTK>(),
             const_definition_parser(),

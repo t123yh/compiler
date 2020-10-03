@@ -38,6 +38,7 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
         current = std::move(new_exp);
     }
     
+    context.record("表达式");
     return current;
 }
 
@@ -63,7 +64,11 @@ term_parser::return_type term_parser::parse(parsing_context &context) const {
 
 factor_parser::return_type factor_parser::parse(parsing_context &context) const {
     std::unique_ptr<expression> r;
-    if (context.match(token_parser<IDENFR>())) {
+    if (context.match(token_parser<IDENFR>(), token_parser<LPARENT>())) {
+        auto e = std::unique_ptr<calling_expression>(new calling_expression);
+        e->call_info = context.expect_one(calling_parser());
+        r = std::move(e);
+    } else if (context.match(token_parser<IDENFR>())) {
         auto ret = std::unique_ptr<variable_access_expression>(new variable_access_expression);
         ret->name = context.expect_one(token_parser<IDENFR>());
 #define ARRAY_IDX token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>()
@@ -82,10 +87,6 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
                 new constant_expression(context.expect_one(integer_parser())));
     } else if (context.parse_if_match(token_parser<LPARENT>())) {
         r = std::get<0>(context.expect(expression_parser(), token_parser<RPARENT>()));
-    } else if (context.match(calling_parser())) {
-        auto e = std::unique_ptr<calling_expression>(new calling_expression);
-        e->call_info = context.expect_one(calling_parser());
-        r = std::move(e);
     } else {
         throw parsing_failure("Invalid factor");
     }
