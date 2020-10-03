@@ -7,7 +7,8 @@
 #include "parser_function.h"
 
 program_parser::return_type program_parser::parse(parsing_context &context) const {
-    std::vector<var_def> global_symbol_table;
+    program result;
+    std::vector<var_def>& global_symbol_table = result.symbols;
     if (context.match(const_description_parser())) {
         auto r = context.expect_one(const_description_parser());
         for (auto& x : r) {
@@ -21,10 +22,13 @@ program_parser::return_type program_parser::parse(parsing_context &context) cons
         }
     }
     
-    auto func = context.expect_one(function_parser());
-    if (context.strategy == FINAL) {
-        context.func_tab[func->signature.identifier->text] = func->signature.return_type != VOIDTK;
+    while (!context.match(token_parser<VOIDTK>(), token_parser<MAINTK>())) {
+        auto func = context.expect_one(function_parser());
+        if (context.strategy == FINAL) {
+            context.func_tab[func->signature.identifier->text] = func->signature.return_type != VOIDTK;
+        }
+        result.functions.push_back(std::move(func));
     }
-    volatile auto func2 = context.expect(main_function_parser());
-    return {};
+    result.main_function = context.expect_one(main_function_parser());
+    return result;
 }

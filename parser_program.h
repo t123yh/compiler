@@ -10,7 +10,7 @@
 
 struct program_parser : public parser
 {
-    typedef struct{} return_type;
+    typedef program return_type;
     
     return_type parse(parsing_context &context) const;
 };

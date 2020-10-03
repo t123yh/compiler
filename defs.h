@@ -150,4 +150,10 @@ struct switch_statement : public statement {
     std::unique_ptr<statement> default_body;
 };
 
+struct program {
+    std::vector<var_def> symbols;
+    std::vector<std::unique_ptr<function>> functions;
+    statement_block main_function;
+};
+
 #endif //COMPILER_DEFS_H

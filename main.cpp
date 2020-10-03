@@ -16,7 +16,7 @@ int main() {
     auto result = tokenize(str);
     
     parsing_context ctx {.current = result.begin(), .end = result.end(), .debug_output = std::cout, .strategy = FINAL};
-    ctx.expect_one(program_parser());
+    volatile auto prog = ctx.expect_one(program_parser());
     
     return 0;
 }
