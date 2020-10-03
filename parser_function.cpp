@@ -102,6 +102,10 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
         sign = context.expect_one(decl_header_parser());
     }
     
+    if (context.strategy == FINAL) {
+        context.func_tab[func->signature.identifier->text] = func->signature.return_type != VOIDTK;
+    }
+    
     sign.parameters = std::get<1>(
             context.expect(token_parser<LPARENT>(), parameter_list_parser(), token_parser<RPARENT>()));
     

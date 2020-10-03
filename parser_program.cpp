@@ -24,9 +24,6 @@ program_parser::return_type program_parser::parse(parsing_context &context) cons
     
     while (!context.match(token_parser<VOIDTK>(), token_parser<MAINTK>())) {
         auto func = context.expect_one(function_parser());
-        if (context.strategy == FINAL) {
-            context.func_tab[func->signature.identifier->text] = func->signature.return_type != VOIDTK;
-        }
         result.functions.push_back(std::move(func));
     }
     result.main_function = context.expect_one(main_function_parser());
