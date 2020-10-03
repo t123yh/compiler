@@ -33,14 +33,13 @@ var_def const_definition_parser::parse_single(parsing_context &context, token_ty
     var_def def;
     def.identifier = context.expect_one(token_parser<IDENFR>());
     def.array = var_def::CONST;
+    def.type = type;
     
     context.expect(token_parser<ASSIGN>());
     
     if (type == INTTK) {
-        def.type = var_def::INT;
         def.value = context.expect_one(integer_parser());
     } else if (type == CHARTK) {
-        def.type = var_def::CHAR;
         def.value = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
     }
     

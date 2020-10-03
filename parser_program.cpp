@@ -23,7 +23,7 @@ program_parser::return_type program_parser::parse(parsing_context &context) cons
     
     auto func = context.expect_one(function_parser());
     if (context.strategy == FINAL) {
-        context.func_tab[func->signature.identifier->text] = func->signature.return_type != var_def::VOID;
+        context.func_tab[func->signature.identifier->text] = func->signature.return_type != VOIDTK;
     }
     volatile auto func2 = context.expect(main_function_parser());
     return {};

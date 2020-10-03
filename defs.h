@@ -17,10 +17,7 @@ struct var_def
         CONST, SCALAR_VAR, ARRAY_1D, ARRAY_2D
     };
     
-    enum type_t
-    {
-        INT = 1, CHAR, VOID
-    };
+    typedef token_type_t type_t;
     
     arr_desc_t array;
     type_t type;
@@ -54,9 +51,7 @@ struct constant_expression : public expression {
 };
 
 struct calculate_expression : public expression {
-    enum op_t {
-        T_MUL, T_DIV, T_PLUS, T_MINUS
-    };
+    typedef token_type_t op_t;
     std::unique_ptr<expression> a, b;
     op_t op;
 };
@@ -116,18 +111,5 @@ struct function {
     function_signature signature;
     statement_block statements;
 };
-
-static inline var_def::type_t token2type(token_ptr tk) {
-    switch (tk->type) {
-        case INTTK:
-            return var_def::INT;
-        case CHARTK:
-            return var_def::CHAR;
-        case VOIDTK:
-            return var_def::VOID;
-        default:
-            return (var_def::type_t)0;
-    }
-}
 
 #endif //COMPILER_DEFS_H

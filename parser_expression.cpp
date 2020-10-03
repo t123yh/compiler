@@ -17,7 +17,7 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
     if (context.parse_if_match(token_parser<MINU>())) {
         std::unique_ptr<calculate_expression> c = make_unique<calculate_expression>();
         c->a = make_unique<constant_expression>(0);
-        c->op = calculate_expression::T_MINUS;
+        c->op = MINU;
         c->b = context.expect_one(term_parser());
         current = std::move(c);
     } else {
@@ -29,11 +29,7 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
         std::unique_ptr<calculate_expression> new_exp = std::unique_ptr<calculate_expression>(new calculate_expression);
         new_exp->a = std::move(current);
         auto t = context.expect_one(token_parser<PLUS, MINU>());
-        if (t->type == PLUS) {
-            new_exp->op = calculate_expression::T_PLUS;
-        } else {
-            new_exp->op = calculate_expression::T_MINUS;
-        }
+        new_exp->op = t->type;
         new_exp->b = context.expect_one(term_parser());
         current = std::move(new_exp);
     }
@@ -48,10 +44,8 @@ term_parser::return_type term_parser::parse(parsing_context &context) const {
     while (true) {
         std::unique_ptr<calculate_expression> new_exp = std::unique_ptr<calculate_expression>(new calculate_expression);
         new_exp->a = std::move(current);
-        if (context.parse_if_match(token_parser<MULT>())) {
-            new_exp->op = calculate_expression::T_MUL;
-        } else if (context.parse_if_match(token_parser<DIV>())) {
-            new_exp->op = calculate_expression::T_DIV;
+        if (context.match(token_parser<MULT, DIV>())) {
+            new_exp->op = context.expect_one(token_parser<MULT, DIV>())->type;
         } else {
             break;
         }

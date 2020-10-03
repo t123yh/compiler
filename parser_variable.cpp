@@ -7,9 +7,9 @@
 
 constant_parser::return_type constant_parser::parse(parsing_context &context) const {
     int64_t val = 0;
-    if (t == var_def::INT && context.match(integer_parser())) {
+    if (t == INTTK && context.match(integer_parser())) {
         val = context.expect_one(integer_parser());
-    } else if (t == var_def::CHAR && context.match(token_parser<CHARCON>())) {
+    } else if (t == CHARTK && context.match(token_parser<CHARCON>())) {
         val = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
     } else {
         throw parsing_failure("Constant type mismatch");
@@ -53,7 +53,7 @@ template <typename TParser> struct list_parser : public parser
 var_def var_definition_with_init_parser::parse(parsing_context &context) const {
     var_def v;
     auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-    v.type = std::get<0>(idf)->type == INTTK ? var_def::INT : var_def::CHAR;
+    v.type = std::get<0>(idf)->type;
     v.identifier = std::get<1>(idf);
     
     // TODO: set dimension for v
@@ -96,7 +96,7 @@ var_definition_without_init_parser::parse(parsing_context &context) const {
     while (true) {
         var_def v;
         auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-        v.type = token2type(std::get<0>(idf));
+        v.type = std::get<0>(idf)->type;
         v.identifier = std::get<1>(idf);
     
         // TODO: set dimension for v

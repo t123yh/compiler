@@ -13,7 +13,7 @@ decl_header_parser::return_type decl_header_parser::parse(parsing_context &conte
     function_signature sign;
     
     auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-    sign.return_type = token2type(std::get<0>(idf));
+    sign.return_type = std::get<0>(idf)->type;
     sign.identifier = std::get<1>(idf);
     
     context.record("声明头部");
@@ -24,7 +24,7 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
     std::vector<function_parameter> ret;
     while (true) {
         auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-        ret.push_back({.type = token2type(std::get<0>(idf)), .name= std::get<1>(idf)});
+        ret.push_back({.type = std::get<0>(idf)->type, .name= std::get<1>(idf)});
         if (!context.parse_if_match(token_parser<COMMA>())) {
             break;
         }
@@ -94,7 +94,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
     std::unique_ptr<function> func = std::unique_ptr<function>(new function);
     function_signature &sign = func->signature;
     if (context.parse_if_match(token_parser<VOIDTK>())) {
-        sign.return_type = var_def::VOID;
+        sign.return_type = VOIDTK;
         sign.identifier = context.expect_one(token_parser<IDENFR>());
     } else {
         sign = context.expect_one(decl_header_parser());
@@ -105,7 +105,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
     
     func->statements = std::get<1>(
             context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
-    if (func->signature.return_type == var_def::VOID) {
+    if (func->signature.return_type == VOIDTK) {
         context.record("无返回值函数定义");
     } else {
         context.record("有返回值函数定义");
