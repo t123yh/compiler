@@ -11,6 +11,8 @@
 class parsing_failure : public std::exception
 {
 public:
+    std::string reason;
+    
     parsing_failure(std::string why);
 };
 

@@ -4,6 +4,6 @@
 
 #include "parsing_failure.h"
 
-parsing_failure::parsing_failure(std::string why) {
+parsing_failure::parsing_failure(std::string why) : reason(why) {
 
 }

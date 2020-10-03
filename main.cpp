@@ -16,8 +16,15 @@ int main() {
     
     auto result = tokenize(str);
     
-    parsing_context ctx {.current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL};
-    volatile auto prog = ctx.expect_one(program_parser());
+    parsing_context ctx{.current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL};
+    try {
+        volatile auto prog = ctx.expect_one(program_parser());
+    } catch (parsing_failure pf) {
+        fout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
+        for (auto& x : result) {
+            fout << x.pretty_print();
+        }
+    }
     
     return 0;
 }
