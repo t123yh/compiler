@@ -5,8 +5,8 @@
 #include <vector>
 #include "parser_const.h"
 
-std::vector <constant_definition> const_description_parser::parse(parsing_context &context) const {
-    std::vector<constant_definition> ret;
+std::vector <var_def> const_description_parser::parse(parsing_context &context) const {
+    std::vector<var_def> ret;
     
     if (context.strategy == TRIAL) {
         token_parser<CONSTTK>();
@@ -20,7 +20,7 @@ std::vector <constant_definition> const_description_parser::parse(parsing_contex
     ));
     
     while (context.parse_if_match(token_parser<CONSTTK>())) {
-        std::vector<constant_definition> d = std::get<0>(context.expect(
+        std::vector<var_def> d = std::get<0>(context.expect(
                 const_definition_parser(),
                 token_parser<SEMICN>()
         ));
@@ -34,18 +34,18 @@ std::vector <constant_definition> const_description_parser::parse(parsing_contex
     return ret;
 }
 
-constant_definition const_definition_parser::parse_single(parsing_context &context, token_type_t type) const {
-    constant_definition def;
+var_def const_definition_parser::parse_single(parsing_context &context, token_type_t type) const {
+    var_def def;
+    def.identifier = context.expect_one(token_parser<IDENFR>());
+    def.array = var_def::CONST;
     
-    
-    def.identifier = context.expect_one(token_parser<IDENFR>())->text;
     context.expect(token_parser<ASSIGN>());
     
     if (type == INTTK) {
-        def.type = constant_definition::INT;
+        def.type = var_def::INT;
         def.value = context.expect_one(integer_parser());
     } else if (type == CHARTK) {
-        def.type = constant_definition::CHAR;
+        def.type = var_def::CHAR;
         def.value = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
     }
     
@@ -53,7 +53,7 @@ constant_definition const_definition_parser::parse_single(parsing_context &conte
 }
 
 const_definition_parser::return_type const_definition_parser::parse(parsing_context &context) const {
-    std::vector<constant_definition> ret;
+    std::vector<var_def> ret;
     token_type_t type = context.expect_one(token_parser<INTTK, CHARTK>())->type;
     
     do {

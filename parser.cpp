@@ -25,6 +25,10 @@ void parsing_context::advance() {
         throw parsing_failure("failed to advance: end reached");
 }
 
+void parsing_context::record(const char* text) {
+    debug_output << "<" << text << ">" << std::endl;
+}
+
 const char* parser::get_name() const {
     return "";
 }

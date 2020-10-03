@@ -7,6 +7,7 @@
 
 #include "parser.h"
 #include "token_parser.h"
+#include "defs.h"
 
 struct unsigned_parser : public parser
 {
@@ -22,29 +23,18 @@ struct integer_parser : public parser
     return_type parse(parsing_context &context) const;
 };
 
-struct constant_definition
-{
-    enum type_t
-    {
-        INT, CHAR
-    };
-    type_t type;
-    std::string identifier;
-    int64_t value;
-};
-
 struct const_definition_parser : public parser
 {
-    typedef std::vector<constant_definition> return_type;
+    typedef std::vector<var_def> return_type;
     
-    constant_definition parse_single(parsing_context& context, token_type_t type) const;
+    var_def parse_single(parsing_context& context, token_type_t type) const;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct const_description_parser : public parser
 {
-    typedef std::vector<constant_definition> return_type;
+    typedef std::vector<var_def> return_type;
     
     return_type parse(parsing_context &context) const;
 };

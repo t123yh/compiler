@@ -13,6 +13,7 @@
 #include "parsing_failure.h"
 #include <iostream>
 
+#include "defs.h"
 enum class variable_type {
     INT,
     CHAR
@@ -34,7 +35,6 @@ struct parser {
 };
 
 
-typedef std::vector<token>::iterator token_ptr;
 struct parsing_context
 {
     token_ptr current, end;
@@ -44,6 +44,7 @@ struct parsing_context
     void advance();
     parsing_context fork_trial();
     
+    void record(const char* txt);
     
     template <typename... TParsers> std::tuple<typename TParsers::return_type...> expect(TParsers... args) {
         return std::tuple<typename TParsers::return_type...>{args.parse(*this)...};
