@@ -22,12 +22,12 @@ decl_header_parser::return_type decl_header_parser::parse(parsing_context &conte
 
 parameter_list_parser::return_type parameter_list_parser::parse(parsing_context &context) const {
     std::vector<function_parameter> ret;
-    while (true) {
-        auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-        ret.push_back({.type = std::get<0>(idf)->type, .name= std::get<1>(idf)});
-        if (!context.parse_if_match(token_parser<COMMA>())) {
-            break;
+    if (!context.match(token_parser<RPARENT>())) {
+        do {
+            auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
+            ret.push_back({.type = std::get<0>(idf)->type, .name= std::get<1>(idf)});
         }
+        while (context.parse_if_match(token_parser<COMMA>()));
     }
     context.record("参数表");
     return ret;
@@ -83,9 +83,11 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
 
 arguments_parser::return_type arguments_parser::parse(parsing_context &context) const {
     std::vector<std::unique_ptr<expression>> arg_list;
-    do {
-        arg_list.push_back(context.expect_one(expression_parser()));
-    } while (context.parse_if_match(token_parser<COMMA>()));
+    if (!context.match(token_parser<RPARENT>())) {
+        do {
+            arg_list.push_back(context.expect_one(expression_parser()));
+        } while (context.parse_if_match(token_parser<COMMA>()));
+    }
     context.record("值参数表");
     return arg_list;
 }
