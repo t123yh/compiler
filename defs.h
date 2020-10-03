@@ -112,4 +112,42 @@ struct function {
     statement_block statements;
 };
 
+struct condition {
+    std::unique_ptr<expression> exp1, exp2;
+    token_type_t comparator;
+};
+
+struct if_statement : public statement {
+    condition cond;
+    std::unique_ptr<statement> if_body, else_body;
+};
+
+struct while_statement : public statement {
+    condition cond;
+    std::unique_ptr<statement> body;
+};
+
+struct for_statement : public statement {
+    token_ptr initial_var;
+    std::unique_ptr<expression> initial_exp;
+    condition cond;
+    
+    token_ptr step_set_var;
+    token_ptr step_get_var;
+    int64_t step_len;
+    
+    std::unique_ptr<statement> body;
+};
+
+struct switch_cond : public statement {
+    int64_t val;
+    std::unique_ptr<statement> body;
+};
+
+struct switch_statement : public statement {
+    std::unique_ptr<expression> exp;
+    std::vector<switch_cond> conditions;
+    std::unique_ptr<statement> default_body;
+};
+
 #endif //COMPILER_DEFS_H

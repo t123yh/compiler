@@ -7,6 +7,7 @@
 #include "token_parser.h"
 #include "parser_expression.h"
 #include "parser_function.h"
+#include "parser_complex_statement.h"
 
 statement_parser::return_type statement_parser::parse(parsing_context &context) const {
     statement_parser::return_type ret;
@@ -32,6 +33,14 @@ statement_parser::return_type statement_parser::parse(parsing_context &context) 
     } else if (context.match(token_parser<SCANFTK>())) {
         ret = context.expect_one(scan_parser());
         context.expect_one(token_parser<SEMICN>());
+    } else if (context.match(token_parser<IFTK>())) {
+        ret = context.expect_one(if_parser());
+    } else if (context.match(token_parser<WHILETK>())) {
+        ret = context.expect_one(while_parser());
+    } else if (context.match(token_parser<FORTK>())) {
+        ret = context.expect_one(for_parser());
+    } else if (context.match(token_parser<SWITCHTK>())) {
+        ret = context.expect_one(switch_parser());
     } else {
         throw parsing_failure("Unable to parse statement");
     }
