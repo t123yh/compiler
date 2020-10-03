@@ -29,7 +29,7 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
             break;
         }
     }
-    context.record("值参数表");
+    context.record("参数表");
     return ret;
 }
 
