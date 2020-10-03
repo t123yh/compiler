@@ -12,6 +12,7 @@
 #include "tokenizer.h"
 #include "parsing_failure.h"
 #include <iostream>
+#include <map>
 
 #include "defs.h"
 enum class variable_type {
@@ -40,6 +41,7 @@ struct parsing_context
     token_ptr current, end;
     std::ostream &debug_output;
     parsing_strategy strategy;
+    std::map<std::string, bool> func_tab;
     
     void advance();
     parsing_context fork_trial();
