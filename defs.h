@@ -38,6 +38,7 @@ struct function_signature
 };
 
 struct expression {
+    virtual ~expression() {}
 };
 
 struct variable_access_expression : public expression {
@@ -66,7 +67,7 @@ struct calling_expression : public expression {
 };
 
 struct statement {
-
+    virtual ~statement() {}
 };
 
 struct assignment_statement : public statement {

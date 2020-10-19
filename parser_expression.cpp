@@ -43,12 +43,12 @@ term_parser::return_type term_parser::parse(parsing_context &context) const {
     current = context.expect_one(factor_parser());
     while (true) {
         std::unique_ptr<calculate_expression> new_exp = std::unique_ptr<calculate_expression>(new calculate_expression);
-        new_exp->a = std::move(current);
         if (context.match(token_parser<MULT, DIV>())) {
             new_exp->op = context.expect_one(token_parser<MULT, DIV>())->type;
         } else {
             break;
         }
+        new_exp->a = std::move(current);
         new_exp->b = context.expect_one(factor_parser());
         current = std::move(new_exp);
     }
