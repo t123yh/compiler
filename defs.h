@@ -15,7 +15,7 @@ typedef std::vector<token>::iterator token_iter;
 struct var_def
 {
     enum arr_desc_t {
-        CONST, SCALAR_VAR, ARRAY_1D, ARRAY_2D
+        CONST, SCALAR_VAR, ARRAY_1D, ARRAY_2D, PARAM
     };
     
     typedef token_type_t type_t;
@@ -26,16 +26,11 @@ struct var_def
     int64_t value;
 };
 
-struct function_parameter {
-    var_def::type_t type;
-    token_ptr name;
-};
-
 struct function_signature
 {
     var_def::type_t return_type;
     token_ptr identifier;
-    std::vector<function_parameter> parameters;
+    std::vector<var_def> parameters;
 };
 
 struct expression {

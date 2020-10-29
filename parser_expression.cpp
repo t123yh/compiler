@@ -61,7 +61,7 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
         auto ret = std::unique_ptr<variable_access_expression>(new variable_access_expression);
         ret->name = context.expect_one(token_parser<IDENFR>());
         if (context.strategy == FINAL) {
-            auto* symb = dynamic_cast<value_symbol*>(context.symbols.find_symbol(ret->name->text));
+            auto* symb = dynamic_cast<variable_symbol*>(context.symbols.find_symbol(ret->name->text));
             if (symb == nullptr) {
                 context.errors.push_back(error{ret->name->line, E_UNDEFINED_SYMBOL});
             }

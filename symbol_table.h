@@ -23,19 +23,10 @@ struct symbol_table_entry {
     int layer;
 };
 
-struct value_symbol : public symbol {
-};
-
-struct variable_symbol : public value_symbol {
+struct variable_symbol : public symbol {
     var_def definition;
     const std::string & get_name() const override;
     explicit variable_symbol(var_def def) : definition(std::move(def)) {}
-};
-
-struct parameter_symbol : public value_symbol {
-    function_parameter param;
-    const std::string & get_name() const override;
-    explicit parameter_symbol(function_parameter p) : param(std::move(p)) {}
 };
 
 struct function_symbol : public symbol {

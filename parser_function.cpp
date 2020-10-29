@@ -21,13 +21,13 @@ decl_header_parser::return_type decl_header_parser::parse(parsing_context &conte
 }
 
 parameter_list_parser::return_type parameter_list_parser::parse(parsing_context &context) const {
-    std::vector<function_parameter> ret;
+    std::vector<var_def> ret;
     if (!context.match(token_parser<RPARENT>())) {
         do {
             auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-            ret.push_back({.type = std::get<0>(idf)->type, .name= std::get<1>(idf)});
+            ret.push_back(var_def{.array = var_def::PARAM, .type = std::get<0>(idf)->type, .identifier = std::get<1>(idf)});
             if (context.strategy == FINAL) {
-                context.add_symbol(make_unique<parameter_symbol>(ret.back()));
+                context.add_symbol(make_unique<variable_symbol>(ret.back()));
             }
         }
         while (context.parse_if_match(token_parser<COMMA>()));

@@ -59,7 +59,3 @@ const std::string &variable_symbol::get_name() const {
 const std::string &function_symbol::get_name() const {
     return sign.identifier->text;
 }
-
-const std::string &parameter_symbol::get_name() const {
-    return param.name->text;
-}

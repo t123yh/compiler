@@ -17,7 +17,7 @@ struct decl_header_parser : public parser
 };
 
 struct parameter_list_parser : public parser {
-    typedef std::vector<function_parameter> return_type;
+    typedef std::vector<var_def> return_type;
     
     return_type parse(parsing_context &context) const;
 };
