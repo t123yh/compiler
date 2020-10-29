@@ -14,7 +14,7 @@
 struct symbol {
     virtual ~symbol() = default;
     
-    virtual const std::string& get_name() const = 0;
+    virtual std::string get_name() const = 0;
 };
 
 struct symbol_table_entry {
@@ -25,14 +25,14 @@ struct symbol_table_entry {
 
 struct variable_symbol : public symbol {
     var_def definition;
-    const std::string & get_name() const override;
+    std::string get_name() const override;
     explicit variable_symbol(var_def def) : definition(std::move(def)) {}
 };
 
 struct function_symbol : public symbol {
     function_signature sign;
     
-    const std::string & get_name() const override;
+    std::string get_name() const override;
     
     explicit function_symbol(function_signature sign) : sign(std::move(sign)) {}
 };
