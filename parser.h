@@ -15,6 +15,8 @@
 #include <map>
 
 #include "defs.h"
+#include "symbol_table.h"
+
 enum class variable_type {
     INT,
     CHAR
@@ -42,7 +44,7 @@ struct parsing_context
     std::ostream &debug_output;
     parsing_strategy strategy;
     error_container& errors;
-    std::map<std::string, bool> func_tab;
+    symbol_table symbols;
     
     void advance();
     parsing_context fork_trial();

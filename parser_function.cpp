@@ -26,6 +26,9 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
         do {
             auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
             ret.push_back({.type = std::get<0>(idf)->type, .name= std::get<1>(idf)});
+            if (context.strategy == FINAL) {
+                context.symbols.add_symbol(make_unique<parameter_symbol>(ret.back()));
+            }
         }
         while (context.parse_if_match(token_parser<COMMA>()));
     }
@@ -71,10 +74,10 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
     context.expect_one(token_parser<RPARENT>());
     
     if (context.strategy == FINAL) {
-        if (context.func_tab.find(info->name->text) == context.func_tab.end()) {
-            throw parsing_failure("Undefined function");
-        }
-        if (context.func_tab[info->name->text]) {
+        auto func = dynamic_cast<function_symbol*>(context.symbols.find_symbol(info->name->text));
+        if (func == nullptr) {
+            context.errors.push_back(error{info->name->line, E_UNDEFINED_SYMBOL});
+        } else if (func->sign.return_type != VOIDTK) {
             context.record("有返回值函数调用语句");
         } else {
             context.record("无返回值函数调用语句");
@@ -106,25 +109,44 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
     }
     
     if (context.strategy == FINAL) {
-        context.func_tab[func->signature.identifier->text] = func->signature.return_type != VOIDTK;
+        context.symbols.add_symbol(make_unique<function_symbol>(sign));
+    }
+    
+    auto s = dynamic_cast<function_symbol*>(context.symbols.symbols.back().item.get());
+    
+    if (context.strategy == FINAL) {
+        context.symbols.enter_layer();
     }
     
     sign.parameters = std::get<1>(
             context.expect(token_parser<LPARENT>(), parameter_list_parser(), token_parser<RPARENT>()));
+    s->sign = sign;
     
     func->statements = std::get<1>(
             context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
+    
     if (func->signature.return_type == VOIDTK) {
         context.record("无返回值函数定义");
     } else {
         context.record("有返回值函数定义");
     }
+    
+    if (context.strategy == FINAL) {
+        context.symbols.pop_layer();
+    }
     return func;
 }
 
 main_function_parser::return_type main_function_parser::parse(parsing_context &context) const {
+    if (context.strategy == FINAL) {
+        context.symbols.enter_layer();
+    }
     context.expect(token_parser<VOIDTK>(), token_parser<MAINTK>(), token_parser<LPARENT>(), token_parser<RPARENT>());
     auto r = std::get<1>(context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
     context.record("主函数");
+    
+    if (context.strategy == FINAL) {
+        context.symbols.pop_layer();
+    }
     return r;
 }

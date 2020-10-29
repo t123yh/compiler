@@ -39,7 +39,7 @@ struct function_signature
 };
 
 struct expression {
-    virtual ~expression() {}
+    virtual ~expression() = default;
 };
 
 struct variable_access_expression : public expression {

@@ -109,6 +109,10 @@ var_def var_definition_with_init_parser::parse(parsing_context &context) const {
         context.errors.push_back(error{context.line(), E_ARRAY_INIT_SIZE_MISMATCH});
     }
     
+    if (context.strategy == FINAL) {
+        context.symbols.add_symbol(make_unique<variable_symbol>(v));
+    }
+    
     context.record("变量定义及初始化");
     return v;
 }
@@ -141,6 +145,11 @@ var_definition_without_init_parser::parse(parsing_context &context) const {
             throw parsing_failure("Not me!");
         }
         vs.push_back(v);
+    
+        if (context.strategy == FINAL) {
+            context.symbols.add_symbol(make_unique<variable_symbol>(v));
+        }
+        
         if (!context.parse_if_match(token_parser<COMMA>())) {
             break;
         }
