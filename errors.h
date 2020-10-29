@@ -15,6 +15,7 @@ enum error_type {
     E_SHOULD_BE_PARENTHESIS = 'l',
     E_SHOULD_BE_BRACKET = 'm',
     E_MISSING_DEFAULT_IN_SWITCH = 'p',
+    E_ARRAY_INIT_SIZE_MISMATCH = 'n'
 };
 
 struct error

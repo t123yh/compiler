@@ -44,9 +44,11 @@ template <typename TParser> struct list_parser : public parser
             r.push_back(context.expect_one(parser));
             end_tk = context.expect_one(token_parser<COMMA, RBRACE>());
         } while (end_tk->type == COMMA);
+        /*
         if (cnt != len) {
-            throw parsing_failure("Array size mismatch");
+            context.errors.push_back(error{context.line(), E_ARRAY_INIT_SIZE_MISMATCH});
         }
+         */
         return r;
     }
 };
@@ -75,16 +77,36 @@ var_def var_definition_with_init_parser::parse(parsing_context &context) const {
     
     context.expect_one(token_parser<ASSIGN>());
     
+    bool init_ok = false;
     // TODO: Initial value
     if (dimen1 == -1 && dimen2 == -1) { // scalar
         v.array = var_def::SCALAR_VAR;
         v.value = context.expect_one(typed_constant_parser(v.type));
-    } else if (dimen2 == -1) { // 1d array
-        v.array = var_def::ARRAY_1D;
-        volatile auto iv = context.expect_one(list_parser<typed_constant_parser>(typed_constant_parser(v.type), dimen1));
-    } else { // 2d array
-        v.array = var_def::ARRAY_2D;
-        volatile auto iv = context.expect_one(list_parser<list_parser<typed_constant_parser>>(list_parser<typed_constant_parser>(typed_constant_parser(v.type), dimen2), dimen1));
+        init_ok = true;
+    } else {
+        if (context.match(token_parser<LBRACE>(), token_parser<LBRACE>())) {
+            v.array = var_def::ARRAY_2D;
+            auto iv = context.expect_one(list_parser<list_parser<typed_constant_parser>>(list_parser<typed_constant_parser>(typed_constant_parser(v.type), dimen2), dimen1));
+            if (dimen1 == iv.size()) {
+                init_ok = true;
+                for (auto& cont : iv) {
+                    if (cont.size() != dimen2) {
+                        init_ok = false;
+                        break;
+                    }
+                }
+            }
+        } else if (context.match(token_parser<LBRACE>())) {
+            v.array = var_def::ARRAY_1D;
+            auto iv = context.expect_one(list_parser<typed_constant_parser>(typed_constant_parser(v.type), dimen1));
+            init_ok = dimen2 == -1 && dimen1 == iv.size();
+        } else {
+            throw parsing_failure("Invalid array init");
+        }
+    }
+    
+    if (!init_ok) {
+        context.errors.push_back(error{context.line(), E_ARRAY_INIT_SIZE_MISMATCH});
     }
     
     context.record("变量定义及初始化");
