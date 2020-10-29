@@ -79,6 +79,14 @@ assignment_parser::return_type assignment_parser::parse(parsing_context &context
 #undef VEC1D
 #undef VEC2D
     
+    if (context.strategy == FINAL) {
+        symbol* sss = context.symbols.find_symbol(ass->identifier->text);
+        auto* symb = dynamic_cast<variable_symbol*>(sss);
+        if (symb == nullptr) {
+            context.errors.push_back(error{ass->identifier->line, E_UNDEFINED_SYMBOL});
+        }
+    }
+    
     context.record("赋值语句");
     return ass;
 }

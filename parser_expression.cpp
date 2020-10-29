@@ -60,6 +60,12 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
     } else if (context.match(token_parser<IDENFR>())) {
         auto ret = std::unique_ptr<variable_access_expression>(new variable_access_expression);
         ret->name = context.expect_one(token_parser<IDENFR>());
+        if (context.strategy == FINAL) {
+            auto* symb = dynamic_cast<value_symbol*>(context.symbols.find_symbol(ret->name->text));
+            if (symb == nullptr) {
+                context.errors.push_back(error{ret->name->line, E_UNDEFINED_SYMBOL});
+            }
+        }
 #define ARRAY_IDX token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>()
         if (context.match(ARRAY_IDX)) {
             ret->idx1 = std::get<1>(context.expect(ARRAY_IDX));
