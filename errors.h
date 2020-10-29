@@ -18,6 +18,7 @@ enum error_type {
     E_ARRAY_INIT_SIZE_MISMATCH = 'n',
     E_UNDEFINED_SYMBOL = 'c',
     E_REDEFINED_SYMBOL = 'b',
+    E_ASSIGN_TO_CONST = 'j'
 };
 
 struct error

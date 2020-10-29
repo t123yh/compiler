@@ -84,6 +84,8 @@ assignment_parser::return_type assignment_parser::parse(parsing_context &context
         auto* symb = dynamic_cast<variable_symbol*>(sss);
         if (symb == nullptr) {
             context.errors.push_back(error{ass->identifier->line, E_UNDEFINED_SYMBOL});
+        } else if (symb->definition.array == var_def::CONST) {
+            context.errors.push_back(error{ass->identifier->line, E_ASSIGN_TO_CONST});
         }
     }
     
