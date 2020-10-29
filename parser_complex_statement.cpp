@@ -34,6 +34,10 @@ condition_parser::return_type condition_parser::parse(parsing_context &context) 
     condition cond{.exp1 = std::move(std::get<0>(s)), .exp2 = std::move(std::get<2>(s)), .comparator = std::get<1>(
             s)->type};
     
+    bool c1 = is_charcon(cond.exp1, context, E_COND_N_CHAR);
+    if (!c1)
+        is_charcon(cond.exp2, context, E_COND_N_CHAR);
+    
     context.record("条件");
     return std::move(cond);
 }

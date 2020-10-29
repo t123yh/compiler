@@ -47,8 +47,10 @@ struct variable_access_expression : public expression {
 };
 
 struct constant_expression : public expression {
-    constant_expression(int64_t v) : val(v) {}
+    constant_expression(int64_t v, token_type_t type, int line) : val(v), type(type), line(line) {}
     int64_t val;
+    token_type_t type; // CHARCON or INTCON
+    int line;
 };
 
 struct calculate_expression : public expression {

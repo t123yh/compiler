@@ -8,7 +8,8 @@
 #include <vector>
 
 enum error_type {
-    E_INVALID_TOKEN = 'a'
+    E_INVALID_TOKEN = 'a',
+    E_COND_N_CHAR = 'f'
 };
 
 struct error

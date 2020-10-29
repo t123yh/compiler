@@ -74,6 +74,22 @@ struct parsing_context
         }
         return false;
     }
+    
+    int line() {
+        return this->current->line;
+    }
 };
+
+static inline bool is_charcon(const std::unique_ptr<expression>& ptr, parsing_context& ctx, error_type ex) {
+    auto* e1 = dynamic_cast<constant_expression*>(ptr.get());
+    if (e1) {
+        if (e1->type == CHARCON) {
+            ctx.errors.push_back({e1->line, ex});
+            return true;
+        }
+    }
+    return false;
+}
+
 
 #endif //COMPILER_PARSER_H

@@ -16,7 +16,7 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
     std::unique_ptr<expression> current;
     if (context.parse_if_match(token_parser<MINU>())) {
         std::unique_ptr<calculate_expression> c = make_unique<calculate_expression>();
-        c->a = make_unique<constant_expression>(0);
+        c->a = make_unique<constant_expression>(0, INTTK, -1);
         c->op = MINU;
         c->b = context.expect_one(term_parser());
         current = std::move(c);
@@ -75,10 +75,10 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
         r = std::move(ret);
     } else if (context.match(token_parser<CHARCON>())) {
         r = std::unique_ptr<constant_expression>(
-                new constant_expression(context.expect_one(token_parser<CHARCON>())->text[0]));
+                new constant_expression(context.expect_one(token_parser<CHARCON>())->text[0], CHARCON, context.line()));
     } else if (context.match(integer_parser())) {
         r = std::unique_ptr<constant_expression>(
-                new constant_expression(context.expect_one(integer_parser())));
+                new constant_expression(context.expect_one(integer_parser()), INTCON, context.line()));
     } else if (context.parse_if_match(token_parser<LPARENT>())) {
         r = std::get<0>(context.expect(expression_parser(), token_parser<RPARENT>()));
     } else {
