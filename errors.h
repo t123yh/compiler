@@ -9,7 +9,8 @@
 
 enum error_type {
     E_INVALID_TOKEN = 'a',
-    E_COND_N_CHAR = 'f'
+    E_COND_N_CHAR = 'f',
+    E_INDEX_N_CHAR = 'i',
 };
 
 struct error

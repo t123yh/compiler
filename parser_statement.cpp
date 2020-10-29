@@ -62,12 +62,15 @@ assignment_parser::return_type assignment_parser::parse(parsing_context &context
         auto s = context.expect(VEC1D);
         ass->identifier = std::get<0>(s);
         ass->da = std::move(std::get<2>(s));
+        is_charcon(ass->da, context, E_INDEX_N_CHAR);
         ass->val = std::move(std::get<5>(s));
     } else if (context.match(VEC2D)) {
         auto s = context.expect(VEC2D);
         ass->identifier = std::get<0>(s);
         ass->da = std::move(std::get<2>(s));
+        is_charcon(ass->da, context, E_INDEX_N_CHAR);
         ass->db = std::move(std::get<5>(s));
+        is_charcon(ass->db, context, E_INDEX_N_CHAR);
         ass->val = std::move(std::get<8>(s));
     } else {
         throw parsing_failure("Un");

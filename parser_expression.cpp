@@ -68,9 +68,11 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
 #define ARRAY_IDX token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>()
         if (context.match(ARRAY_IDX)) {
             ret->idx1 = std::get<1>(context.expect(ARRAY_IDX));
+            is_charcon(ret->idx1, context, E_INDEX_N_CHAR);
         }
         if (context.match(ARRAY_IDX)) {
             ret->idx2 = std::get<1>(context.expect(ARRAY_IDX));
+            is_charcon(ret->idx2, context, E_INDEX_N_CHAR);
         }
         r = std::move(ret);
     } else if (context.match(token_parser<CHARCON>())) {
