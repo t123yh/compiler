@@ -106,14 +106,23 @@ switch_parser::return_type switch_parser::parse(parsing_context &context) const 
             expression_parser(),         // 2
             token_parser<RPARENT>(),     // 3
             token_parser<LBRACE>(),      // 4
-            switch_cond_table_parser(),  // 5
-            switch_default_parser(),     // 6
-            token_parser<RBRACE>()       // 7
+            switch_cond_table_parser()   // 5
     );
     
     u->exp = std::move(std::get<2>(par));
     u->conditions = std::move(std::get<5>(par));
-    u->default_body = std::move(std::get<6>(par));
+    if (context.match(token_parser<DEFAULTTK>())) {
+        auto def = context.expect(
+                switch_default_parser(),     // 0
+                token_parser<RBRACE>()       // 1
+        );
+        u->default_body = std::move(std::get<0>(def));
+    } else if (context.parse_if_match(token_parser<RBRACE>())) {
+        context.errors.push_back(error{context.prev_line(), E_MISSING_DEFAULT_IN_SWITCH});
+        u->default_body = nullptr;
+    } else {
+        throw parsing_failure("Invalid switch");
+    }
     
     context.record("情况语句");
     return u;

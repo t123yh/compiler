@@ -14,6 +14,7 @@ enum error_type {
     E_SHOULD_BE_SEMICOLON = 'k',
     E_SHOULD_BE_PARENTHESIS = 'l',
     E_SHOULD_BE_BRACKET = 'm',
+    E_MISSING_DEFAULT_IN_SWITCH = 'p',
 };
 
 struct error
