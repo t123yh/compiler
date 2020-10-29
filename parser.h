@@ -41,6 +41,7 @@ struct parsing_context
     token_ptr current, end;
     std::ostream &debug_output;
     parsing_strategy strategy;
+    error_container& errors;
     std::map<std::string, bool> func_tab;
     
     void advance();

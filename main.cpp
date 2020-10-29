@@ -20,7 +20,7 @@ int main() {
     
     auto result = tokenize(str, cont);
     
-    parsing_context ctx{.current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL};
+    parsing_context ctx{.current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL, .errors = cont};
     try {
         volatile auto prog = ctx.expect_one(program_parser());
     } catch (parsing_failure pf) {
