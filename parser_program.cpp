@@ -15,7 +15,7 @@ program_parser::return_type program_parser::parse(parsing_context &context) cons
             global_symbol_table.push_back(x);
         }
     }
-    if (context.match(var_description_parser())) {
+    if (context.match(var_definition_parser()) && !context.match(decl_header_parser(), token_parser<LPARENT>())) {
         auto r = context.expect_one( var_description_parser());
         for (auto& x : r) {
             global_symbol_table.push_back(x);

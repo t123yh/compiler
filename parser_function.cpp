@@ -35,10 +35,13 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
 
 compound_statement_parser::return_type compound_statement_parser::parse(parsing_context &context) const {
     statement_block ret;
-    if (context.match(const_description_parser())) {
+    if (context.match(
+            token_parser<CONSTTK>(),
+            const_definition_parser()
+    )) {
         ret.variables = context.expect_one(const_description_parser());
     }
-    if (context.match(var_description_parser())) {
+    if (context.match(var_definition_parser())) {
         auto r = context.expect_one(var_description_parser());
         for (auto &x : r) {
             ret.variables.push_back(x);

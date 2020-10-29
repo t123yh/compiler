@@ -11,6 +11,9 @@ enum error_type {
     E_INVALID_TOKEN = 'a',
     E_COND_N_CHAR = 'f',
     E_INDEX_N_CHAR = 'i',
+    E_SHOULD_BE_SEMICOLON = 'k',
+    E_SHOULD_BE_PARENTHESIS = 'l',
+    E_SHOULD_BE_BRACKET = 'm',
 };
 
 struct error

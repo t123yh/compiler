@@ -4,6 +4,7 @@
 
 #include "parser_variable.h"
 #include "parser_const.h"
+#include "parser_function.h"
 
 typed_constant_parser::return_type typed_constant_parser::parse(parsing_context &context) const {
     int64_t val = 0;
@@ -153,7 +154,7 @@ var_description_parser::return_type var_description_parser::parse(parsing_contex
             vars.push_back(x);
         }
         context.expect_one(token_parser<SEMICN>());
-    } while (context.match(var_definition_parser(), token_parser<SEMICN>()));
+    } while (context.match(var_definition_parser()) && !context.match(decl_header_parser(), token_parser<LPARENT>()));
     context.record("变量说明");
     return vars;
 }
