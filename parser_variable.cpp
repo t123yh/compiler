@@ -6,24 +6,6 @@
 #include "parser_const.h"
 #include "parser_function.h"
 
-typed_constant_parser::return_type typed_constant_parser::parse(parsing_context &context) const {
-    int64_t val = 0;
-    if (t == INTTK && context.match(integer_parser())) {
-        val = context.expect_one(integer_parser());
-    } else if (t == CHARTK && context.match(token_parser<CHARCON>())) {
-        val = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
-    } else {
-        throw parsing_failure("Constant type mismatch");
-    }
-    
-    context.record("常量");
-    return val;
-}
-
-typed_constant_parser::typed_constant_parser(var_def::type_t t) : t(t) {
-
-}
-
 template <typename TParser> struct list_parser : public parser
 {
     typedef std::vector<typename TParser::return_type> return_type;

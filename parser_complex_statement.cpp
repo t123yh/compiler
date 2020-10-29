@@ -105,12 +105,15 @@ switch_parser::return_type switch_parser::parse(parsing_context &context) const 
             token_parser<LPARENT>(),     // 1
             expression_parser(),         // 2
             token_parser<RPARENT>(),     // 3
-            token_parser<LBRACE>(),      // 4
-            switch_cond_table_parser()   // 5
+            token_parser<LBRACE>()      // 4
     );
     
     u->exp = std::move(std::get<2>(par));
-    u->conditions = std::move(std::get<5>(par));
+    auto* t = dynamic_cast<constant_expression*>(u->exp.get());
+    auto cond_type = INTTK;
+    if (t && t->type == CHARTK)
+        cond_type = CHARTK;
+    u->conditions = context.expect_one(switch_cond_table_parser(cond_type));
     if (context.match(token_parser<DEFAULTTK>())) {
         auto def = context.expect(
                 switch_default_parser(),     // 0
@@ -136,35 +139,18 @@ switch_default_parser::return_type switch_default_parser::parse(parsing_context 
 
 switch_cond_table_parser::return_type switch_cond_table_parser::parse(parsing_context &context) const {
     std::vector<switch_cond> ret;
-    ret.push_back(context.expect_one(switch_cond_parser()));
+    ret.push_back(context.expect_one(switch_cond_parser(type)));
     while (context.match(token_parser<CASETK>())) {
-        ret.push_back(context.expect_one(switch_cond_parser()));
+        ret.push_back(context.expect_one(switch_cond_parser(type)));
     }
     
     context.record("情况表");
     return ret;
 }
 
-struct constant_parser : public parser
-{
-    typedef int64_t return_type;
-    
-    return_type parse(parsing_context &context) const {
-        int64_t val = 0;
-        if (context.match(integer_parser())) {
-            val = context.expect_one(integer_parser());
-        } else if (context.match(token_parser<CHARCON>())) {
-            val = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
-        }
-        
-        context.record("常量");
-        return val;
-    }
-};
-
 switch_cond_parser::return_type switch_cond_parser::parse(parsing_context &context) const {
     switch_cond c;
-    auto r = context.expect(token_parser<CASETK>(), constant_parser(), token_parser<COLON>(), statement_parser());
+    auto r = context.expect(token_parser<CASETK>(), typed_constant_parser(type), token_parser<COLON>(), statement_parser());
     c.val = std::get<1>(r);
     c.body = std::move(std::get<3>(r));
     context.record("情况子语句");

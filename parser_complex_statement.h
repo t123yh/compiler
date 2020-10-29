@@ -46,13 +46,15 @@ struct switch_parser : public parser {
 
 struct switch_cond_parser : public parser {
     typedef switch_cond return_type;
-    
+    token_type_t type;
+    explicit switch_cond_parser(token_type_t t) : type(t){}
     return_type parse(parsing_context &context) const;
 };
 
 struct switch_cond_table_parser : public parser {
     typedef std::vector<switch_cond> return_type;
-    
+    token_type_t type;
+    explicit switch_cond_table_parser(token_type_t t) : type(t){}
     return_type parse(parsing_context &context) const;
 };
 

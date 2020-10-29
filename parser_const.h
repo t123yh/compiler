@@ -39,4 +39,23 @@ struct const_description_parser : public parser
     return_type parse(parsing_context &context) const;
 };
 
+struct constant_parser : public parser
+{
+    typedef constant_expression return_type;
+    
+    bool output_name;
+    explicit constant_parser(bool output = true) : output_name(output) {}
+    
+    return_type parse(parsing_context &context) const;
+    
+};
+
+struct typed_constant_parser : public parser {
+    typedef int64_t return_type;
+    var_def::type_t t;
+    typed_constant_parser(var_def::type_t t);
+    return_type parse(parsing_context &context) const;
+};
+
+
 #endif //COMPILER_PARSER_CONST_H

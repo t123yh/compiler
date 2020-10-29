@@ -30,18 +30,19 @@ std::vector <var_def> const_description_parser::parse(parsing_context &context) 
 }
 
 var_def const_definition_parser::parse_single(parsing_context &context, token_type_t type) const {
-    var_def def;
+    var_def def{};
     def.identifier = context.expect_one(token_parser<IDENFR>());
     def.array = var_def::CONST;
     def.type = type;
     
     context.expect(token_parser<ASSIGN>());
     
-    if (type == INTTK) {
-        def.value = context.expect_one(integer_parser());
-    } else if (type == CHARTK) {
-        def.value = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
+    auto constant = context.expect_one(constant_parser());
+    if (constant.type != type) {
+        context.errors.push_back(error{context.line(), E_CONST_TYPE_MISMATCH});
     }
+    
+    def.value = constant.val;
     
     return def;
 }
@@ -83,4 +84,38 @@ unsigned_parser::return_type unsigned_parser::parse(parsing_context &context) co
     auto numtk = context.expect_one(token_parser<INTCON>());
     context.debug_output << "<无符号整数>" << std::endl;
     return stoi(numtk->text);
+}
+
+constant_parser::return_type constant_parser::parse(parsing_context &context) const {
+    int64_t val;
+    token_type_t type;
+    if (context.match(integer_parser())) {
+        val = context.expect_one(integer_parser());
+        type = INTTK;
+    } else if (context.match(token_parser<CHARCON>())) {
+        val = (unsigned char) context.expect_one(token_parser<CHARCON>())->text[0];
+        type = CHARTK;
+    } else {
+        throw parsing_failure("Invalid constant");
+    }
+    
+    if (output_name) {
+        context.record("常量");
+    }
+    
+    return constant_expression(val, type, context.prev_line());
+}
+
+typed_constant_parser::return_type typed_constant_parser::parse(parsing_context &context) const {
+    auto const_expr = context.expect_one(constant_parser());
+    if (const_expr.type != t) {
+        context.errors.push_back(error{const_expr.line, E_CONST_TYPE_MISMATCH});
+    }
+    
+    context.record("常量");
+    return const_expr.val;
+}
+
+typed_constant_parser::typed_constant_parser(var_def::type_t t) : t(t) {
+
 }
