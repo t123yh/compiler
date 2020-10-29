@@ -10,7 +10,8 @@
 #include <memory>
 
 #include "tokenizer.h"
-typedef std::vector<token>::iterator token_ptr;
+typedef token* token_ptr;
+typedef std::vector<token>::iterator token_iter;
 struct var_def
 {
     enum arr_desc_t {

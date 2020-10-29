@@ -15,10 +15,10 @@ template <token_type_t... acceptable_tokens> struct token_parser : public parser
                 context.debug_output << context.current->pretty_print();
                 auto ret = context.current;
                 context.advance();
-                return ret;
+                return &*ret;
             }
         }
-        throw parsing_failure("Invalid token");
+        throw parsing_failure("Invalid token at line " + std::to_string(context.line()));
     }
 };
 

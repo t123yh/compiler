@@ -16,7 +16,7 @@ error_container garbage;
 
 parsing_context parsing_context::fork_trial() {
     nullstream.setstate(std::ios_base::badbit);
-    return parsing_context{current, end, nullstream, TRIAL, garbage};
+    return parsing_context{start, current, end, nullstream, TRIAL, garbage};
 }
 
 void parsing_context::advance() {

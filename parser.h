@@ -38,7 +38,7 @@ struct parser {
 
 struct parsing_context
 {
-    token_ptr current, end;
+    token_iter start, current, end;
     std::ostream &debug_output;
     parsing_strategy strategy;
     error_container& errors;
@@ -73,6 +73,13 @@ struct parsing_context
             return true;
         }
         return false;
+    }
+    
+    int prev_line() {
+        if (this->current != this->start) {
+            return (this->current - 1)->line;
+        }
+        return this->current->line;
     }
     
     int line() {
