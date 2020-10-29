@@ -58,6 +58,7 @@ struct symbol_table
     void pop_layer();
     
     symbol* find_symbol(const std::string& name);
+    bool check_duplicate(const std::string& name);
 };
 
 #endif //COMPILER_SYMBOL_TABLE_H

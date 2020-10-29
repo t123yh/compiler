@@ -54,7 +54,7 @@ const_definition_parser::return_type const_definition_parser::parse(parsing_cont
         ret.push_back(parse_single(context, type));
     
         if (context.strategy == FINAL) {
-            context.symbols.add_symbol(make_unique<variable_symbol>(ret.back()));
+            context.add_symbol(make_unique<variable_symbol>(ret.back()));
         }
     }
     while (context.parse_if_match(token_parser<COMMA>()));

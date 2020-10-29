@@ -43,6 +43,14 @@ symbol* symbol_table::find_symbol(const std::string& name) {
     return nullptr;
 }
 
+bool symbol_table::check_duplicate(const std::string &name) {
+    auto it{lookup.find(name)};
+    if (it != lookup.end()) {
+        return symbols[it->second].layer == current_layer;
+    }
+    return false;
+}
+
 
 const std::string &variable_symbol::get_name() const {
     return definition.identifier->text;

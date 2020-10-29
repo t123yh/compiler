@@ -87,6 +87,8 @@ struct parsing_context
     int line() {
         return this->current->line;
     }
+    
+    void add_symbol(std::unique_ptr<symbol> item);
 };
 
 static inline bool is_charcon(const std::unique_ptr<expression>& ptr, parsing_context& ctx, error_type ex) {

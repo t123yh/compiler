@@ -27,7 +27,7 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
             auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
             ret.push_back({.type = std::get<0>(idf)->type, .name= std::get<1>(idf)});
             if (context.strategy == FINAL) {
-                context.symbols.add_symbol(make_unique<parameter_symbol>(ret.back()));
+                context.add_symbol(make_unique<parameter_symbol>(ret.back()));
             }
         }
         while (context.parse_if_match(token_parser<COMMA>()));
@@ -109,7 +109,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
     }
     
     if (context.strategy == FINAL) {
-        context.symbols.add_symbol(make_unique<function_symbol>(sign));
+        context.add_symbol(make_unique<function_symbol>(sign));
     }
     
     auto s = dynamic_cast<function_symbol*>(context.symbols.symbols.back().item.get());
