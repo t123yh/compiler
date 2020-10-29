@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdint>
 #include <vector>
+#include "errors.h"
 
 enum token_type_t
 {
@@ -15,7 +16,7 @@ enum token_type_t
     VOIDTK, MAINTK, IFTK, ELSETK, SWITCHTK, CASETK, DEFAULTTK, WHILETK,
     FORTK, SCANFTK, PRINTFTK, RETURNTK, PLUS, MINU, MULT, DIV, LSS, LEQ,
     GRE, GEQ, EQL, NEQ, COLON, ASSIGN, SEMICN, COMMA, LPARENT, RPARENT,
-    LBRACK, RBRACK, LBRACE, RBRACE
+    LBRACK, RBRACK, LBRACE, RBRACE, STRCON_ERR, CHARCON_ERR
 };
 
 const char* token_name(token_type_t);
@@ -32,6 +33,6 @@ struct token
     std::string pretty_print() const;
 };
 
-std::vector<token> tokenize(std::string orig);
+std::vector<token> tokenize(std::string orig, error_container& errct);
 
 #endif //COMPILER_TOKENIZER_H

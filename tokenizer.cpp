@@ -7,6 +7,7 @@
 #include <cassert>
 #include "tokenizer.h"
 #include "utils.h"
+#include "errors.h"
 
 #pragma clang diagnostic ignored "-Wc99-designator"
 const char* const symbol_names[] = {
@@ -134,22 +135,25 @@ static token_type_t get_token_type(std::string s) {
         return CHARTK;
     } else if (s == "scanf") {
         return SCANFTK;
-    } else if (std::regex_match(s, std::regex("\".*\""))) {
+    } else if (std::regex_match(s, std::regex(R"("[\x20\x21\x23-\x7e]+")"))) {
         return STRCON;
-    } else if (std::regex_match(s, std::regex("'.'"))) {
+    } else if (std::regex_match(s, std::regex("'[+*a-zA-Z0-9_]'"))) {
         return CHARCON;
     } else if (std::regex_match(s, std::regex("\\d+"))) {
         return INTCON;
     } else if (std::regex_match(s, std::regex("\\w+"))) {
         return IDENFR;
+    } else if (std::regex_match(s, std::regex(R"(".*")"))) {
+        return STRCON_ERR;
+    } else if (std::regex_match(s, std::regex("'.'"))) {
+        return CHARCON_ERR;
     } else {
         return ERROR;
     }
 }
 
-std::vector<token> tokenize(std::string orig) {
+std::vector<token> tokenize(std::string orig, error_container &cont) {
     std::regex re(R"(\".*?\"|'.'|\*|\+|-|\d+|\w+|\/|<=|<|>=|>|==|!=|:|=|;|,|\(|\)|\[|\]|\{|\}|\S+?)");
-    
     
     std::sregex_iterator iter(orig.begin(), orig.end(), re);
     std::sregex_iterator end;
@@ -168,10 +172,19 @@ std::vector<token> tokenize(std::string orig) {
             }
         }
         
-        if (type == STRCON || type == CHARCON) {
+        if (type == STRCON || type == CHARCON || type == STRCON_ERR || type == CHARCON_ERR) {
             txt = txt.substr(1, txt.size() - 2);
         }
         
+        if (type == STRCON_ERR || type == CHARCON_ERR || type == ERROR) {
+            cont.push_back(error{line, E_INVALID_TOKEN});
+            if (type == STRCON_ERR)
+                type = STRCON;
+            if (type == CHARCON_ERR)
+                type = CHARCON;
+        }
+    
+    
         result.push_back(token{.type = type, .text = txt, .line = line, .column = pos - linestart});
         iter++;
     }
