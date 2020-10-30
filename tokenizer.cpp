@@ -137,7 +137,7 @@ static token_type_t get_token_type(std::string s) {
         return SCANFTK;
     } else if (std::regex_match(s, std::regex(R"("[\x20\x21\x23-\x7e]+")"))) {
         return STRCON;
-    } else if (std::regex_match(s, std::regex("'[+*a-zA-Z0-9_]'"))) {
+    } else if (std::regex_match(s, std::regex("'[+*-/a-zA-Z0-9_]'"))) {
         return CHARCON;
     } else if (std::regex_match(s, std::regex("\\d+"))) {
         return INTCON;
