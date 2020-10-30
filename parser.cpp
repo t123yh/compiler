@@ -53,6 +53,12 @@ token_type_t get_expression_type(const expression* expr, parsing_context& ctx) {
         if (vara != nullptr)
             return vara->definition.type;
     }
+    auto* t3 = dynamic_cast<const calling_expression*>(expr);
+    if (t3) {
+        auto* vara = dynamic_cast<function_symbol*>(ctx.symbols.find_symbol(t3->call_info->name->text));
+        if (vara != nullptr)
+            return vara->sign.return_type;
+    }
     
     return cond_type;
 }
