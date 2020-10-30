@@ -71,7 +71,7 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
     info->name = context.expect_one(token_parser<IDENFR>());
     context.expect_one(token_parser<LPARENT>());
     info->arguments = context.expect_one(arguments_parser());
-    context.expect_one(token_parser<RPARENT>());
+    context.expect_one(token_parser<RPARENT>(true));
     
     if (context.strategy == FINAL) {
         auto func = dynamic_cast<function_symbol*>(context.symbols.find_symbol(info->name->text));

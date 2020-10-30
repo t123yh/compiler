@@ -10,11 +10,15 @@
 
 template <token_type_t... acceptable_tokens> struct token_parser : public parser {
     typedef token_ptr return_type;
+    bool forgiving;
+    
+    explicit token_parser(bool forgiving = false) : forgiving(forgiving) {}
+    
     return_type parse(parsing_context &context) const {
         
         token_type_t tokenList[] = {acceptable_tokens...};
         
-        if (COUNT_OF(tokenList) == 1 && context.strategy == FINAL) {
+        if (COUNT_OF(tokenList) == 1 && (context.strategy == FINAL || forgiving)) {
             if (tokenList[0] == RPARENT){
                 if (context.current->type != RPARENT) {
                     context.errors.push_back(error{context.prev_line(), E_SHOULD_BE_PARENTHESIS});

@@ -83,7 +83,7 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
         r = std::unique_ptr<constant_expression>(
                 new constant_expression(context.expect_one(integer_parser()), INTCON, context.line()));
     } else if (context.parse_if_match(token_parser<LPARENT>())) {
-        r = std::get<0>(context.expect(expression_parser(), token_parser<RPARENT>()));
+        r = std::get<0>(context.expect(expression_parser(), token_parser<RPARENT>(true)));
     } else {
         throw parsing_failure("Invalid factor");
     }
