@@ -66,7 +66,7 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
                 context.errors.push_back(error{ret->name->line, E_UNDEFINED_SYMBOL});
             }
         }
-#define ARRAY_IDX token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>()
+#define ARRAY_IDX token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(true)
         if (context.match(ARRAY_IDX)) {
             ret->idx1 = std::get<1>(context.expect(ARRAY_IDX));
             is_charcon(ret->idx1, context, E_INDEX_N_CHAR);

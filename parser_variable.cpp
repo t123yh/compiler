@@ -44,13 +44,13 @@ var_def var_definition_with_init_parser::parse(parsing_context &context) const {
     // TODO: set dimension for v
     int dimen1 = -1, dimen2 = -1;
     if (context.parse_if_match(token_parser<LBRACK>())) {
-        dimen1 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>()));
+        dimen1 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>(true)));
         if (dimen1 <= 0) {
             throw parsing_failure("Length of array is too small");
         }
     }
     if (context.parse_if_match(token_parser<LBRACK>())) {
-        dimen2 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>()));
+        dimen2 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>(true)));
         if (dimen2 <= 0) {
             throw parsing_failure("Length of array is too small");
         }
@@ -111,13 +111,13 @@ var_definition_without_init_parser::parse(parsing_context &context) const {
         // TODO: set dimension for v
         int dimen1 = -1, dimen2 = -1;
         if (context.parse_if_match(token_parser<LBRACK>())) {
-            dimen1 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>()));
+            dimen1 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>(true)));
             if (dimen1 <= 0) {
                 throw parsing_failure("Length of array is too small");
             }
         }
         if (context.parse_if_match(token_parser<LBRACK>())) {
-            dimen2 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>()));
+            dimen2 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>(true)));
             if (dimen2 <= 0) {
                 throw parsing_failure("Length of array is too small");
             }

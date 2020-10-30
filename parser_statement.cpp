@@ -52,8 +52,8 @@ statement_parser::return_type statement_parser::parse(parsing_context &context) 
 assignment_parser::return_type assignment_parser::parse(parsing_context &context) const {
     std::unique_ptr<assignment_statement> ass = std::unique_ptr<assignment_statement>(new assignment_statement);
 #define SCALAR token_parser<IDENFR>(), token_parser<ASSIGN>(), expression_parser()
-#define VEC1D token_parser<IDENFR>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(), token_parser<ASSIGN>(), expression_parser()
-#define VEC2D token_parser<IDENFR>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(), token_parser<ASSIGN>(), expression_parser()
+#define VEC1D token_parser<IDENFR>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(true), token_parser<ASSIGN>(), expression_parser()
+#define VEC2D token_parser<IDENFR>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(true), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(true), token_parser<ASSIGN>(), expression_parser()
     if (context.match(SCALAR)) {
         auto s = context.expect(SCALAR);
         ass->line = std::get<1>(s)->line;
