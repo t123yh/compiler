@@ -42,7 +42,7 @@ statement_parser::return_type statement_parser::parse(parsing_context &context) 
     } else if (context.match(token_parser<SWITCHTK>())) {
         ret = context.expect_one(switch_parser());
     } else {
-        throw parsing_failure("Unable to parse statement");
+        throw parsing_failure("Unable to parse statement at line " + std::to_string(context.line()));
     }
     context.record("语句");
     return ret;
