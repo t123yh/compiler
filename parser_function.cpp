@@ -210,6 +210,14 @@ main_function_parser::return_type main_function_parser::parse(parsing_context &c
     auto r = std::get<1>(context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
     context.record("主函数");
     
+    std::vector<return_statement*> returns;
+    find_all_return(returns, r.statements);
+    for (auto* rt : returns) {
+        if (rt->is_fucking_return || rt->val != nullptr) {
+            context.errors.push_back(error{rt->line, E_RETURN_MISMATCH_FOR_VOID_FUNCTIONS});
+        }
+    }
+    
     if (context.strategy == FINAL) {
         context.symbols.pop_layer();
     }
