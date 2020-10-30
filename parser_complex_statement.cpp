@@ -63,31 +63,48 @@ for_parser::return_type for_parser::parse(parsing_context &context) const {
             token_parser<LPARENT>(),    // 1
             token_parser<IDENFR>(),     // 2
             token_parser<ASSIGN>(),     // 3
-            expression_parser(),        // 4
-            token_parser<SEMICN>(),     // 5
-            condition_parser(),         // 6
-            token_parser<SEMICN>(),     // 7
-            token_parser<IDENFR>(),     // 8
-            token_parser<ASSIGN>(),     // 9
-            token_parser<IDENFR>(),     // 10
-            token_parser<PLUS, MINU>(), // 11
-            step_len_parser(),          // 12
-            token_parser<RPARENT>(),    // 13
-            statement_parser()          // 14
+            expression_parser()        // 4
+    );
+    var_def v{};
+    v.array = var_def::SCALAR_VAR;
+    v.identifier = std::get<2>(s1);
+    v.type = INTTK;
+    if (context.strategy == FINAL) {
+        context.symbols.enter_layer();
+        context.add_symbol(make_unique<variable_symbol>(v));
+    }
+    
+    auto s2 = context.expect(
+            token_parser<SEMICN>(),     // 0
+            condition_parser(),         // 1
+            token_parser<SEMICN>(),     // 2
+            token_parser<IDENFR>(),     // 3
+            token_parser<ASSIGN>(),     // 4
+            token_parser<IDENFR>(),     // 5
+            token_parser<PLUS, MINU>(), // 6
+            step_len_parser(),          // 7
+            token_parser<RPARENT>(),    // 8
+            statement_parser()          // 9
     );
     auto ret = std::unique_ptr<for_statement>(new for_statement);
     ret->initial_var = std::get<2>(s1);
     ret->initial_exp = std::move(std::get<4>(s1));
-    ret->cond = std::move(std::get<6>(s1));
-    ret->step_set_var = std::get<8>(s1);
-    ret->step_get_var = std::get<10>(s1);
-    bool inv = std::get<11>(s1)->type == MINU;
-    ret->step_len = std::get<12>(s1);
+    ret->cond = std::move(std::get<1>(s2));
+    ret->step_set_var = std::get<3>(s2);
+    ret->step_get_var = std::get<5>(s2);
+    
+    context.ensure_variable_existance(ret->step_get_var);
+    context.ensure_variable_existance(ret->step_set_var);
+    
+    bool inv = std::get<6>(s2)->type == MINU;
+    ret->step_len = std::get<7>(s2);
     if (inv) {
         ret->step_len = -ret->step_len;
     }
-    ret->body = std::move(std::get<14>(s1));
+    ret->body = std::move(std::get<9>(s2));
     
+    if (context.strategy == FINAL)
+        context.symbols.pop_layer();
     context.record("循环语句");
     return ret;
 }
