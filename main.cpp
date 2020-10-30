@@ -30,6 +30,7 @@ int main() {
         }
     }
     
+    std::sort(errs.begin(), errs.end());
     for (auto& err : errs) {
         std::cout << err.line << " " << (char)err.type << std::endl;
     }
