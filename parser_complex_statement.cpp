@@ -109,11 +109,7 @@ switch_parser::return_type switch_parser::parse(parsing_context &context) const 
     );
     
     u->exp = std::move(std::get<2>(par));
-    auto* t = dynamic_cast<constant_expression*>(u->exp.get());
-    auto cond_type = INTTK;
-    if (t && t->type == CHARTK)
-        cond_type = CHARTK;
-    u->conditions = context.expect_one(switch_cond_table_parser(cond_type));
+    u->conditions = context.expect_one(switch_cond_table_parser(get_expression_type(u->exp.get())));
     if (context.match(token_parser<DEFAULTTK>())) {
         auto def = context.expect(
                 switch_default_parser(),     // 0

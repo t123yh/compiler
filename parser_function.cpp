@@ -170,8 +170,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
         if (returns.empty()) {
             context.errors.push_back(error{context.prev_line(), E_RETURN_MISMATCH_FOR_RETURNING_FUNCTIONS});
         } else for (auto* r : returns) {
-            auto* f = dynamic_cast<constant_expression*>(r->val.get());
-            bool type_mismatch = f && ((f->type == CHARCON && sign.return_type == INTCON) || (sign.return_type == CHARCON && f->type != CHARCON));
+            bool type_mismatch = get_expression_type(r->val.get()) != sign.return_type;
             
             if (r->is_fucking_return || r->val == nullptr || type_mismatch) {
                 context.errors.push_back(error{r->line, E_RETURN_MISMATCH_FOR_RETURNING_FUNCTIONS});
