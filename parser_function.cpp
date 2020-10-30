@@ -102,7 +102,7 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
 
 arguments_parser::return_type arguments_parser::parse(parsing_context &context) const {
     std::vector<std::unique_ptr<expression>> arg_list;
-    if (!context.match(token_parser<RPARENT>())) {
+    if (!context.match(token_parser<RPARENT, SEMICN, RBRACK>())) {
         do {
             arg_list.push_back(context.expect_one(expression_parser()));
         } while (context.parse_if_match(token_parser<COMMA>()));
