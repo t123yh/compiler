@@ -153,19 +153,17 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
         sign = context.expect_one(decl_header_parser());
     }
     
+    function_symbol* newsymb = nullptr;
     if (context.strategy == FINAL) {
-        context.add_symbol(make_unique<function_symbol>(sign));
-    }
-    
-    auto s = dynamic_cast<function_symbol*>(context.symbols.symbols.back().item.get());
-    
-    if (context.strategy == FINAL) {
+        newsymb = dynamic_cast<function_symbol*>(context.add_symbol(make_unique<function_symbol>(sign)));
         context.symbols.enter_layer();
     }
     
     sign.parameters = std::get<1>(
             context.expect(token_parser<LPARENT>(), parameter_list_parser(), token_parser<RPARENT>()));
-    s->sign = sign;
+    
+    if (newsymb != nullptr)
+        newsymb->sign = sign;
     
     func->statements = std::get<1>(
             context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));

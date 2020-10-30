@@ -88,7 +88,7 @@ struct parsing_context
         return this->current->line;
     }
     
-    void add_symbol(std::unique_ptr<symbol> item);
+    symbol* add_symbol(std::unique_ptr<symbol> item);
 };
 
 token_type_t get_expression_type(const expression* expr, parsing_context& ctx);

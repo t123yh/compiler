@@ -30,11 +30,13 @@ void parsing_context::record(const char* text) {
     debug_output << "<" << text << ">" << std::endl;
 }
 
-void parsing_context::add_symbol(std::unique_ptr<symbol> item) {
+symbol* parsing_context::add_symbol(std::unique_ptr<symbol> item) {
     if (symbols.check_duplicate(item->get_name())) {
         errors.push_back(error{prev_line(), E_REDEFINED_SYMBOL});
+        return nullptr;
     } else {
         symbols.add_symbol(std::move(item));
+        return symbols.symbols.back().item.get();
     }
 }
 
