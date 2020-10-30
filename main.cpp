@@ -9,6 +9,7 @@
 int main() {
     std::ifstream t("testfile.txt");
     std::ofstream fout("output.txt");
+    std::ofstream eout("error.txt");
     
     error_container errs;
     
@@ -24,15 +25,15 @@ int main() {
     try {
         volatile auto prog = ctx.expect_one(program_parser());
     } catch (parsing_failure& pf) {
-        std::cout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
+        // std::cout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
         for (auto& x : result) {
-            fout << x.pretty_print();
+            // fout << x.pretty_print();
         }
     }
     
     std::sort(errs.begin(), errs.end());
     for (auto& err : errs) {
-        std::cout << err.line << " " << (char)err.type << std::endl;
+        eout << err.line << " " << (char)err.type << std::endl;
     }
     
     return 0;
