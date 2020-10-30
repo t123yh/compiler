@@ -165,11 +165,11 @@ std::vector<token> tokenize(std::string orig, error_container &cont) {
         token_type_t type = get_token_type(txt);
         int pos = iter->position(0);
         while (lastpos < pos) {
-            lastpos++;
             if (orig[lastpos] == '\n') {
                 linestart = lastpos;
                 line++;
             }
+            lastpos++;
         }
         
         if (type == STRCON || type == CHARCON || type == STRCON_ERR || type == CHARCON_ERR) {
