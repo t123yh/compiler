@@ -22,7 +22,7 @@ decl_header_parser::return_type decl_header_parser::parse(parsing_context &conte
 
 parameter_list_parser::return_type parameter_list_parser::parse(parsing_context &context) const {
     std::vector<var_def> ret;
-    if (!context.match(token_parser<RPARENT>())) {
+    if (!context.match(token_parser<RPARENT, LBRACE>())) { // LBRACE in case of missing RPARENT
         do {
             auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
             ret.push_back(
