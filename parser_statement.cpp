@@ -56,10 +56,12 @@ assignment_parser::return_type assignment_parser::parse(parsing_context &context
 #define VEC2D token_parser<IDENFR>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(), token_parser<LBRACK>(), expression_parser(), token_parser<RBRACK>(), token_parser<ASSIGN>(), expression_parser()
     if (context.match(SCALAR)) {
         auto s = context.expect(SCALAR);
+        ass->line = std::get<1>(s)->line;
         ass->identifier = std::get<0>(s);
         ass->val = std::move(std::get<2>(s));
     } else if (context.match(VEC1D)) {
         auto s = context.expect(VEC1D);
+        ass->line = std::get<4>(s)->line;
         ass->identifier = std::get<0>(s);
         ass->da = std::move(std::get<2>(s));
         is_charcon(ass->da, context, E_INDEX_N_CHAR);
@@ -67,6 +69,7 @@ assignment_parser::return_type assignment_parser::parse(parsing_context &context
     } else if (context.match(VEC2D)) {
         auto s = context.expect(VEC2D);
         ass->identifier = std::get<0>(s);
+        ass->line = std::get<7>(s)->line;
         ass->da = std::move(std::get<2>(s));
         is_charcon(ass->da, context, E_INDEX_N_CHAR);
         ass->db = std::move(std::get<5>(s));
@@ -94,11 +97,19 @@ assignment_parser::return_type assignment_parser::parse(parsing_context &context
 }
 
 return_parser::return_type return_parser::parse(parsing_context &context) const {
-    context.expect(token_parser<RETURNTK>());
+    context.expect_one(token_parser<RETURNTK>());
     auto r = std::unique_ptr<return_statement>(new return_statement);
+    r->is_fucking_return = false;
+    r->line = context.line();
     if (context.parse_if_match(token_parser<LPARENT>())) {
-        r->val = context.expect_one(expression_parser());
-        context.expect_one(token_parser<RPARENT>());
+        if (context.parse_if_match(token_parser<RPARENT>())) {
+            // return();
+            r->is_fucking_return = true;
+            r->val = std::unique_ptr<expression>(nullptr);
+        } else {
+            r->val = context.expect_one(expression_parser());
+            context.expect_one(token_parser<RPARENT>());
+        }
     } else {
         r->val = std::unique_ptr<expression>(nullptr);
     }
@@ -108,6 +119,7 @@ return_parser::return_type return_parser::parse(parsing_context &context) const 
 
 print_parser::return_type print_parser::parse(parsing_context &context) const {
     auto pt = std::unique_ptr<print_statement>(new print_statement);
+    pt->line = context.line();
     context.expect(token_parser<PRINTFTK>(), token_parser<LPARENT>());
     if (context.match(token_parser<STRCON>(), token_parser<COMMA>(), expression_parser())) {
         pt->print_content = context.expect_one(token_parser<STRCON>());
@@ -136,6 +148,7 @@ print_parser::return_type print_parser::parse(parsing_context &context) const {
 
 scan_parser::return_type scan_parser::parse(parsing_context &context) const {
     auto s = std::unique_ptr<scan_statement>(new scan_statement);
+    s->line = context.line();
     s->identifier = std::get<2>(context.expect(token_parser<SCANFTK>(), token_parser<LPARENT>(), token_parser<IDENFR>(),
                                                token_parser<RPARENT>()));
     context.record("读语句");

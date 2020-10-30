@@ -20,6 +20,8 @@ enum error_type {
     E_REDEFINED_SYMBOL = 'b',
     E_ASSIGN_TO_CONST = 'j',
     E_CONST_TYPE_MISMATCH = 'o',
+    E_RETURN_MISMATCH_FOR_VOID_FUNCTIONS = 'g',
+    E_RETURN_MISMATCH_FOR_RETURNING_FUNCTIONS = 'h',
 };
 
 struct error

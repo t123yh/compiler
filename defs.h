@@ -65,6 +65,7 @@ struct calling_expression : public expression {
 };
 
 struct statement {
+    int line;
     virtual ~statement() {}
 };
 
@@ -84,6 +85,7 @@ struct empty_statement : public statement {
 
 struct return_statement: public statement {
     std::unique_ptr<expression> val;
+    bool is_fucking_return; // return(); is invalid in any case
 };
 
 struct print_statement: public statement {

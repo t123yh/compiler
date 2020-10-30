@@ -22,4 +22,8 @@ static inline std::string str_to_lower(std::string data) {
     return data;
 }
 
+#define TOKENPASTE(x, y) x ## y
+#define TOKENPASTE2(x, y) TOKENPASTE(x, y)
+#define UNIQUE_NAME TOKENPASTE2(__uniq__, __LINE__)
+
 #endif //COMPILER_UTILS_H
