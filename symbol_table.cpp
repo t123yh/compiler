@@ -25,7 +25,7 @@ void symbol_table::pop_layer() {
     while (!symbols.empty()) {
         if (symbols.back().layer > current_layer) {
             int nxt = symbols.back().ptr_next_same_name;
-            std::string name = symbols.back().item->get_name();
+            std::string name = str_to_lower(symbols.back().item->get_name());
             if (nxt == -1) {
                 lookup.erase(lookup.find(name));
             } else {
