@@ -90,7 +90,7 @@ struct parsing_context
     
     symbol* add_symbol(std::unique_ptr<symbol> item);
     
-    void ensure_variable_existance(token_ptr iden);
+    void ensure_variable_existance(token_ptr iden, bool write);
 };
 
 token_type_t get_expression_type(const expression* expr, parsing_context& ctx);

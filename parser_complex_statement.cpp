@@ -65,14 +65,6 @@ for_parser::return_type for_parser::parse(parsing_context &context) const {
             token_parser<ASSIGN>(),     // 3
             expression_parser()        // 4
     );
-    var_def v{};
-    v.array = var_def::SCALAR_VAR;
-    v.identifier = std::get<2>(s1);
-    v.type = INTTK;
-    if (context.strategy == FINAL) {
-        context.symbols.enter_layer();
-        context.add_symbol(make_unique<variable_symbol>(v));
-    }
     
     auto s2 = context.expect(
             token_parser<SEMICN>(),     // 0
@@ -93,8 +85,9 @@ for_parser::return_type for_parser::parse(parsing_context &context) const {
     ret->step_set_var = std::get<3>(s2);
     ret->step_get_var = std::get<5>(s2);
     
-    context.ensure_variable_existance(ret->step_get_var);
-    context.ensure_variable_existance(ret->step_set_var);
+    context.ensure_variable_existance(ret->initial_var, true);
+    context.ensure_variable_existance(ret->step_get_var, false);
+    context.ensure_variable_existance(ret->step_set_var, true);
     
     bool inv = std::get<6>(s2)->type == MINU;
     ret->step_len = std::get<7>(s2);
@@ -103,8 +96,6 @@ for_parser::return_type for_parser::parse(parsing_context &context) const {
     }
     ret->body = std::move(std::get<9>(s2));
     
-    if (context.strategy == FINAL)
-        context.symbols.pop_layer();
     context.record("循环语句");
     return ret;
 }

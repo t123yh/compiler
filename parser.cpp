@@ -40,11 +40,15 @@ symbol* parsing_context::add_symbol(std::unique_ptr<symbol> item) {
     }
 }
 
-void parsing_context::ensure_variable_existance(token_ptr iden) {
+void parsing_context::ensure_variable_existance(token_ptr iden, bool write) {
     if (this->strategy == FINAL) {
         auto* symb = dynamic_cast<variable_symbol*>(symbols.find_symbol(iden->text));
         if (symb == nullptr) {
             errors.push_back(error{iden->line, E_UNDEFINED_SYMBOL});
+        } else if (write) {
+            if (symb->definition.array == var_def::CONST) {
+                errors.push_back(error{iden->line, E_ASSIGN_TO_CONST});
+            }
         }
     }
 }
