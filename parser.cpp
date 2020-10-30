@@ -41,3 +41,19 @@ void parsing_context::add_symbol(std::unique_ptr<symbol> item) {
 const char* parser::get_name() const {
     return "";
 }
+
+token_type_t get_expression_type(const expression* expr, parsing_context& ctx) {
+    auto cond_type = INTTK;
+    auto* t = dynamic_cast<const constant_expression*>(expr);
+    if (t && t->type == CHARCON)
+        cond_type = CHARTK;
+    auto* t2 = dynamic_cast<const variable_access_expression*>(expr);
+    if (t2) {
+        auto* vara = dynamic_cast<variable_symbol*>(ctx.symbols.find_symbol(t2->name->text));
+        if (vara != nullptr)
+            return vara->definition.type;
+    }
+    
+    return cond_type;
+}
+

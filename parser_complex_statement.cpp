@@ -109,7 +109,7 @@ switch_parser::return_type switch_parser::parse(parsing_context &context) const 
     );
     
     u->exp = std::move(std::get<2>(par));
-    u->conditions = context.expect_one(switch_cond_table_parser(get_expression_type(u->exp.get())));
+    u->conditions = context.expect_one(switch_cond_table_parser(get_expression_type(u->exp.get(), context)));
     if (context.match(token_parser<DEFAULTTK>())) {
         auto def = context.expect(
                 switch_default_parser(),     // 0

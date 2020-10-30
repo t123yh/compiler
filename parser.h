@@ -91,13 +91,12 @@ struct parsing_context
     void add_symbol(std::unique_ptr<symbol> item);
 };
 
+token_type_t get_expression_type(const expression* expr, parsing_context& ctx);
+
 static inline bool is_charcon(const std::unique_ptr<expression>& ptr, parsing_context& ctx, error_type ex) {
-    auto* e1 = dynamic_cast<constant_expression*>(ptr.get());
-    if (e1) {
-        if (e1->type == CHARCON) {
-            ctx.errors.push_back({e1->line, ex});
-            return true;
-        }
+    if (get_expression_type(ptr.get(), ctx) == CHARTK) {
+        ctx.errors.push_back({ctx.prev_line(), ex});
+        return true;
     }
     return false;
 }

@@ -64,7 +64,6 @@ struct calling_expression : public expression {
     std::unique_ptr<function_call_info> call_info;
 };
 
-token_type_t get_expression_type(const expression* expr);
 
 struct statement {
     int line;

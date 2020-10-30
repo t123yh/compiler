@@ -87,7 +87,7 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
                 context.errors.push_back(error{info->name->line, E_PARAMETER_COUNT_MISMATCH});
             } else {
                 for (int i = 0; i < func->sign.parameters.size(); i++) {
-                    auto x = get_expression_type(info->arguments[i].get());
+                    auto x = get_expression_type(info->arguments[i].get(), context);
                     auto y = func->sign.parameters[i].type;
                     if (x != y) {
                         context.errors.push_back(error{info->name->line, E_PARAMETER_TYPE_MISMATCH});
@@ -183,7 +183,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
         if (returns.empty()) {
             context.errors.push_back(error{context.prev_line(), E_RETURN_MISMATCH_FOR_RETURNING_FUNCTIONS});
         } else for (auto* r : returns) {
-            bool type_mismatch = get_expression_type(r->val.get()) != sign.return_type;
+            bool type_mismatch = get_expression_type(r->val.get(), context) != sign.return_type;
             
             if (r->is_fucking_return || r->val == nullptr || type_mismatch) {
                 context.errors.push_back(error{r->line, E_RETURN_MISMATCH_FOR_RETURNING_FUNCTIONS});
