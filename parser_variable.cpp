@@ -104,19 +104,21 @@ var_definition_without_init_parser::parse(parsing_context &context) const {
     std::vector<var_def> vs;
     auto type = context.expect_one(token_parser<INTTK, CHARTK>())->type;
     while (true) {
-        var_def v;
+        var_def v{};
         v.type = type;
         v.identifier = context.expect_one(token_parser<IDENFR>());
-    
-        // TODO: set dimension for v
+        v.array = var_def::SCALAR_VAR;
+            
         int dimen1 = -1, dimen2 = -1;
         if (context.parse_if_match(token_parser<LBRACK>())) {
+            v.array = var_def::ARRAY_1D;
             dimen1 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>(true)));
             if (dimen1 <= 0) {
                 throw parsing_failure("Length of array is too small");
             }
         }
         if (context.parse_if_match(token_parser<LBRACK>())) {
+            v.array = var_def::ARRAY_2D;
             dimen2 = std::get<0>(context.expect(unsigned_parser(), token_parser<RBRACK>(true)));
             if (dimen2 <= 0) {
                 throw parsing_failure("Length of array is too small");
