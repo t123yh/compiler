@@ -77,10 +77,23 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
         auto func = dynamic_cast<function_symbol*>(context.symbols.find_symbol(info->name->text));
         if (func == nullptr) {
             context.errors.push_back(error{info->name->line, E_UNDEFINED_SYMBOL});
-        } else if (func->sign.return_type != VOIDTK) {
-            context.record("有返回值函数调用语句");
         } else {
-            context.record("无返回值函数调用语句");
+            if (func->sign.return_type != VOIDTK) {
+                context.record("有返回值函数调用语句");
+            } else {
+                context.record("无返回值函数调用语句");
+            }
+            if (func->sign.parameters.size() != info->arguments.size()) {
+                context.errors.push_back(error{info->name->line, E_PARAMETER_COUNT_MISMATCH});
+            } else {
+                for (int i = 0; i < func->sign.parameters.size(); i++) {
+                    auto x = get_expression_type(info->arguments[i].get());
+                    auto y = func->sign.parameters[i].type;
+                    if (x != y) {
+                        context.errors.push_back(error{info->name->line, E_PARAMETER_TYPE_MISMATCH});
+                    }
+                }
+            }
         }
     }
     
