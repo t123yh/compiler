@@ -5,7 +5,7 @@
 #ifndef COMPILER_SYMBOL_TABLE_H
 #define COMPILER_SYMBOL_TABLE_H
 
-#include "defs.h"
+#include "base_defs.h"
 #include <utility>
 #include <vector>
 #include <map>
