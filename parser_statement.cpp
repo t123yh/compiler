@@ -154,7 +154,7 @@ scan_parser::return_type scan_parser::parse(parsing_context &context) const {
     auto* sb = dynamic_cast<variable_symbol*>(context.symbols.find_symbol(s->identifier->text));
     if (sb == nullptr) {
         context.errors.push_back(error{s->identifier->line, E_UNDEFINED_SYMBOL});
-    } else if (sb->definition.array== var_def::CONST) {
+    } else if (sb->definition.array == var_def::CONST) {
         context.errors.push_back(error{s->identifier->line, E_ASSIGN_TO_CONST});
     }
     context.record("读语句");

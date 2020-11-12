@@ -25,7 +25,7 @@ int main() {
     try {
         volatile auto prog = ctx.expect_one(program_parser());
     } catch (parsing_failure& pf) {
-        // std::cout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
+        std::cout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
         for (auto& x : result) {
             // fout << x.pretty_print();
         }
