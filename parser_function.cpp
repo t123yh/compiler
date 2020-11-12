@@ -28,7 +28,7 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
             ret.push_back(
                     var_def{.array = var_def::PARAM, .type = std::get<0>(idf)->type, .identifier = std::get<1>(idf)});
             if (context.strategy == FINAL) {
-                context.add_symbol(make_unique<variable_symbol>(ret.back()));
+                context.add_symbol(std::make_shared<variable_symbol>(ret.back()));
             }
         } while (context.parse_if_match(token_parser<COMMA>()));
     }
@@ -67,7 +67,7 @@ statements_parser::return_type statements_parser::parse(parsing_context &context
 }
 
 calling_parser::return_type calling_parser::parse(parsing_context &context) const {
-    auto info = std::unique_ptr<function_call_info>(new function_call_info);
+    auto info = std::shared_ptr<function_call_info>(new function_call_info);
     info->name = context.expect_one(token_parser<IDENFR>());
     context.expect_one(token_parser<LPARENT>());
     info->arguments = context.expect_one(arguments_parser());
@@ -101,7 +101,7 @@ calling_parser::return_type calling_parser::parse(parsing_context &context) cons
 }
 
 arguments_parser::return_type arguments_parser::parse(parsing_context &context) const {
-    std::vector<std::unique_ptr<expression>> arg_list;
+    std::vector<std::shared_ptr<expression>> arg_list;
     if (!context.match(token_parser<RPARENT, SEMICN, RBRACK>())) {
         do {
             arg_list.push_back(context.expect_one(expression_parser()));
@@ -111,7 +111,7 @@ arguments_parser::return_type arguments_parser::parse(parsing_context &context) 
     return arg_list;
 }
 
-void find_all_return(std::vector<return_statement*> &results, const std::unique_ptr<statement> &statement) {
+void find_all_return(std::vector<return_statement*> &results, const std::shared_ptr<statement> &statement) {
 #define CHK(VAR, TYPE) auto VAR = dynamic_cast<TYPE*>(statement.get()); if (VAR)
     CHK(a1, return_statement) {
         results.push_back(a1);
@@ -137,14 +137,14 @@ void find_all_return(std::vector<return_statement*> &results, const std::unique_
 #undef CHK
 }
 
-void find_all_return(std::vector<return_statement*>& results, const std::vector<std::unique_ptr<statement>> &statements) {
+void find_all_return(std::vector<return_statement*>& results, const std::vector<std::shared_ptr<statement>> &statements) {
     for (const auto& s : statements) {
         find_all_return(results, s);
     }
 }
 
 function_parser::return_type function_parser::parse(parsing_context &context) const {
-    std::unique_ptr<function> func = std::unique_ptr<function>(new function);
+    std::shared_ptr<function> func = std::shared_ptr<function>(new function);
     function_signature &sign = func->signature;
     if (context.parse_if_match(token_parser<VOIDTK>())) {
         sign.return_type = VOIDTK;
@@ -155,7 +155,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
     
     function_symbol* newsymb = nullptr;
     if (context.strategy == FINAL) {
-        newsymb = dynamic_cast<function_symbol*>(context.add_symbol(make_unique<function_symbol>(sign)));
+        newsymb = dynamic_cast<function_symbol*>(context.add_symbol(std::make_shared<function_symbol>(sign)));
         context.symbols.enter_layer();
     }
     

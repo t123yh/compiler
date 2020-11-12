@@ -18,7 +18,7 @@ struct symbol {
 };
 
 struct symbol_table_entry {
-    std::unique_ptr<symbol> item;
+    std::shared_ptr<symbol> item;
     int ptr_next_same_name;
     int layer;
 };
@@ -43,7 +43,7 @@ struct symbol_table
     std::vector<symbol_table_entry> symbols;
     
     int current_layer;
-    void add_symbol(std::unique_ptr<symbol> item);
+    void add_symbol(std::shared_ptr<symbol> item);
     
     void enter_layer();
     void pop_layer();

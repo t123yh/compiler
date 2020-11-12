@@ -10,31 +10,31 @@
 #include "parser.h"
 
 struct statement_parser : public parser {
-    typedef std::unique_ptr<statement> return_type;
+    typedef std::shared_ptr<statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct assignment_parser : public parser {
-    typedef std::unique_ptr<assignment_statement> return_type;
+    typedef std::shared_ptr<assignment_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct return_parser : public parser {
-    typedef std::unique_ptr<return_statement> return_type;
+    typedef std::shared_ptr<return_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct print_parser : public parser {
-    typedef std::unique_ptr<print_statement> return_type;
+    typedef std::shared_ptr<print_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct scan_parser : public parser {
-    typedef std::unique_ptr<scan_statement> return_type;
+    typedef std::shared_ptr<scan_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };

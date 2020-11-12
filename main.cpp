@@ -36,5 +36,9 @@ int main() {
         eout << err.line << " " << (char)err.type << std::endl;
     }
     
+    if (errs.empty()) {
+    
+    }
+    
     return 0;
 }

@@ -30,24 +30,24 @@ struct compound_statement_parser : public parser {
 
 struct statements_parser: public parser
 {
-    typedef std::vector<std::unique_ptr<statement>> return_type;
+    typedef std::vector<std::shared_ptr<statement>> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct arguments_parser: public parser
 {
-    typedef std::vector<std::unique_ptr<expression>> return_type;
+    typedef std::vector<std::shared_ptr<expression>> return_type;
     return_type parse(parsing_context &context) const;
 };
 
 struct calling_parser : public parser {
-    typedef std::unique_ptr<function_call_info> return_type;
+    typedef std::shared_ptr<function_call_info> return_type;
     return_type parse(parsing_context &context) const;
 };
 
 struct function_parser : public parser {
-    typedef std::unique_ptr<function> return_type;
+    typedef std::shared_ptr<function> return_type;
     return_type parse(parsing_context &context) const;
 };
 

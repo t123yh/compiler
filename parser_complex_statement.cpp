@@ -10,7 +10,7 @@
 #include "parser_variable.h"
 
 if_parser::return_type if_parser::parse(parsing_context &context) const {
-    auto ret = std::unique_ptr<if_statement>(new if_statement);
+    auto ret = std::shared_ptr<if_statement>(new if_statement);
     auto s1 = context.expect(
             token_parser<IFTK>(),
             token_parser<LPARENT>(),
@@ -43,7 +43,7 @@ condition_parser::return_type condition_parser::parse(parsing_context &context) 
 }
 
 while_parser::return_type while_parser::parse(parsing_context &context) const {
-    auto ret = std::unique_ptr<while_statement>(new while_statement);
+    auto ret = std::shared_ptr<while_statement>(new while_statement);
     auto s1 = context.expect(
             token_parser<WHILETK>(),
             token_parser<LPARENT>(),
@@ -78,7 +78,7 @@ for_parser::return_type for_parser::parse(parsing_context &context) const {
             token_parser<RPARENT>(),    // 8
             statement_parser()          // 9
     );
-    auto ret = std::unique_ptr<for_statement>(new for_statement);
+    auto ret = std::shared_ptr<for_statement>(new for_statement);
     ret->initial_var = std::get<2>(s1);
     ret->initial_exp = std::move(std::get<4>(s1));
     ret->cond = std::move(std::get<1>(s2));
@@ -107,7 +107,7 @@ step_len_parser::return_type step_len_parser::parse(parsing_context &context) co
 }
 
 switch_parser::return_type switch_parser::parse(parsing_context &context) const {
-    auto u = std::unique_ptr<switch_statement>(new switch_statement);
+    auto u = std::shared_ptr<switch_statement>(new switch_statement);
     auto par = context.expect(
             token_parser<SWITCHTK>(),    // 0
             token_parser<LPARENT>(),     // 1

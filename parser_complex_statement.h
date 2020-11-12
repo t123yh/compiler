@@ -15,13 +15,13 @@ struct condition_parser : public parser {
 };
 
 struct if_parser : public parser {
-    typedef std::unique_ptr<if_statement> return_type;
+    typedef std::shared_ptr<if_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct while_parser : public parser {
-    typedef std::unique_ptr<while_statement> return_type;
+    typedef std::shared_ptr<while_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
@@ -33,13 +33,13 @@ struct step_len_parser : public parser {
 };
 
 struct for_parser : public parser {
-    typedef std::unique_ptr<for_statement> return_type;
+    typedef std::shared_ptr<for_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct switch_parser : public parser {
-    typedef std::unique_ptr<switch_statement> return_type;
+    typedef std::shared_ptr<switch_statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };
@@ -59,7 +59,7 @@ struct switch_cond_table_parser : public parser {
 };
 
 struct switch_default_parser : public parser {
-    typedef std::unique_ptr<statement> return_type;
+    typedef std::shared_ptr<statement> return_type;
     
     return_type parse(parsing_context &context) const;
 };

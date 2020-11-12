@@ -9,19 +9,19 @@
 #include "parser.h"
 
 struct factor_parser : public parser {
-    typedef std::unique_ptr<expression> return_type;
+    typedef std::shared_ptr<expression> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct term_parser : public parser {
-    typedef std::unique_ptr<expression> return_type;
+    typedef std::shared_ptr<expression> return_type;
     
     return_type parse(parsing_context &context) const;
 };
 
 struct expression_parser : public parser {
-    typedef std::unique_ptr<expression> return_type;
+    typedef std::shared_ptr<expression> return_type;
     
     return_type parse(parsing_context &context) const;
 };

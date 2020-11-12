@@ -5,7 +5,7 @@
 #include "symbol_table.h"
 #include "utils.h"
 
-void symbol_table::add_symbol(std::unique_ptr<symbol> item) {
+void symbol_table::add_symbol(std::shared_ptr<symbol> item) {
     std::string name = str_to_lower(item->get_name());
     int l_ptr = -1;
     auto it{lookup.find(name)};

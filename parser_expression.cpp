@@ -8,10 +8,10 @@
 #include "parser_function.h"
 
 expression_parser::return_type expression_parser::parse(parsing_context &context) const {
-    std::unique_ptr<expression> current;
+    std::shared_ptr<expression> current;
     if (context.parse_if_match(token_parser<MINU>())) {
-        std::unique_ptr<calculate_expression> c = make_unique<calculate_expression>();
-        c->a = make_unique<constant_expression>(0, INTTK, -1);
+        std::shared_ptr<calculate_expression> c = std::make_shared<calculate_expression>();
+        c->a = std::make_shared<constant_expression>(0, INTTK, -1);
         c->op = MINU;
         c->b = context.expect_one(term_parser());
         current = std::move(c);
@@ -21,7 +21,7 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
     }
     
     while (context.match(token_parser<PLUS, MINU>())) {
-        std::unique_ptr<calculate_expression> new_exp = std::unique_ptr<calculate_expression>(new calculate_expression);
+        std::shared_ptr<calculate_expression> new_exp = std::shared_ptr<calculate_expression>(new calculate_expression);
         new_exp->a = std::move(current);
         auto t = context.expect_one(token_parser<PLUS, MINU>());
         new_exp->op = t->type;
@@ -34,10 +34,10 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
 }
 
 term_parser::return_type term_parser::parse(parsing_context &context) const {
-    std::unique_ptr<expression> current;
+    std::shared_ptr<expression> current;
     current = context.expect_one(factor_parser());
     while (true) {
-        std::unique_ptr<calculate_expression> new_exp = std::unique_ptr<calculate_expression>(new calculate_expression);
+        std::shared_ptr<calculate_expression> new_exp = std::shared_ptr<calculate_expression>(new calculate_expression);
         if (context.match(token_parser<MULT, DIV>())) {
             new_exp->op = context.expect_one(token_parser<MULT, DIV>())->type;
         } else {
@@ -52,13 +52,13 @@ term_parser::return_type term_parser::parse(parsing_context &context) const {
 }
 
 factor_parser::return_type factor_parser::parse(parsing_context &context) const {
-    std::unique_ptr<expression> r;
+    std::shared_ptr<expression> r;
     if (context.match(token_parser<IDENFR>(), token_parser<LPARENT>())) {
-        auto e = std::unique_ptr<calling_expression>(new calling_expression);
+        auto e = std::shared_ptr<calling_expression>(new calling_expression);
         e->call_info = context.expect_one(calling_parser());
         r = std::move(e);
     } else if (context.match(token_parser<IDENFR>())) {
-        auto ret = std::unique_ptr<variable_access_expression>(new variable_access_expression);
+        auto ret = std::shared_ptr<variable_access_expression>(new variable_access_expression);
         ret->name = context.expect_one(token_parser<IDENFR>());
         if (context.strategy == FINAL) {
             auto* symb = dynamic_cast<variable_symbol*>(context.symbols.find_symbol(ret->name->text));
@@ -77,10 +77,10 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
         }
         r = std::move(ret);
     } else if (context.match(token_parser<CHARCON>())) {
-        r = std::unique_ptr<constant_expression>(
+        r = std::shared_ptr<constant_expression>(
                 new constant_expression(context.expect_one(token_parser<CHARCON>())->text[0], CHARCON, context.line()));
     } else if (context.match(integer_parser())) {
-        r = std::unique_ptr<constant_expression>(
+        r = std::shared_ptr<constant_expression>(
                 new constant_expression(context.expect_one(integer_parser()), INTCON, context.line()));
     } else if (context.parse_if_match(token_parser<LPARENT>())) {
         r = std::get<0>(context.expect(expression_parser(), token_parser<RPARENT>(true)));
