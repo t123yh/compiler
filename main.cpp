@@ -23,7 +23,24 @@ int main() {
     
     parsing_context ctx{.start = result.begin(), .current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL, .errors = errs};
     try {
-        volatile auto prog = ctx.expect_one(program_parser());
+        program p = ctx.expect_one(program_parser());
+        std::sort(errs.begin(), errs.end());
+        for (auto& err : errs) {
+            eout << err.line << " " << (char)err.type << std::endl;
+        }
+    
+        if (errs.empty()) {
+            global_generation_context ggc;
+            p.popluate_global_variables(ggc);
+            ggc.symbols.enter_layer();
+            generation_context main_ctx(ggc);
+            p.main_function.populate_variables(main_ctx);
+            p.main_function.generate_statements(main_ctx);
+            ggc.symbols.pop_layer();
+            
+            // generation_context ctx;
+        }
+        
     } catch (parsing_failure& pf) {
         std::cout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
         for (auto& x : result) {
@@ -31,14 +48,7 @@ int main() {
         }
     }
     
-    std::sort(errs.begin(), errs.end());
-    for (auto& err : errs) {
-        eout << err.line << " " << (char)err.type << std::endl;
-    }
     
-    if (errs.empty()) {
-    
-    }
     
     return 0;
 }

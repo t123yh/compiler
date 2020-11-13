@@ -38,7 +38,7 @@ void symbol_table::pop_layer() {
     }
 }
 
-symbol* symbol_table::find_symbol(const std::string& name) {
+symbol* symbol_table::find_symbol(const std::string &name) {
     auto it{lookup.find(str_to_lower(name))};
     if (it != lookup.end()) {
         return symbols[it->second].item.get();
@@ -61,3 +61,4 @@ std::string variable_symbol::get_name() const {
 std::string function_symbol::get_name() const {
     return sign.identifier->text;
 }
+

@@ -11,6 +11,8 @@
 #include <map>
 #include <memory>
 
+#include "intermediate.h"
+
 struct symbol {
     virtual ~symbol() = default;
     
@@ -25,6 +27,7 @@ struct symbol_table_entry {
 
 struct variable_symbol : public symbol {
     var_def definition;
+    std::shared_ptr<intermediate_variable> var;
     std::string get_name() const override;
     explicit variable_symbol(var_def def) : definition(std::move(def)) {}
 };
