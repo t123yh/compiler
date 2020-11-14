@@ -30,7 +30,7 @@ int main() {
         }
     
         if (errs.empty()) {
-            global_generation_context ggc;
+            global_generation_context ggc{};
             p.popluate_global_variables(ggc);
             generation_context main_ctx(ggc, "main");
             
@@ -39,7 +39,17 @@ int main() {
             std::vector<std::string> shit;
             main_ctx.assign_stack_space();
             main_ctx.generate_mips(shit);
+    
+    
+            std::cout<< ".data" << std::endl;
+            for (auto& s : ggc.string_table) {
+                std::cout << std::get<0>(s) << ": .asciiz \"" << std::get<1>(s) << "\"" << std::endl;
+            }
+            for (auto& v : ggc.variables) {
+                std::cout << v.first << ": .word " << v.second.value << std::endl;
+            }
             
+            std::cout<< ".text" << std::endl;
             for (auto& x : shit) {
                 std::cout << x << std::endl;
             }

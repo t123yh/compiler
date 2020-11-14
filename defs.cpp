@@ -61,7 +61,6 @@ std::shared_ptr<intermediate_variable> calling_expression::write_intermediate(ge
 static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname) {
     auto l = ctx.variables.find(vname);
     if (l != ctx.variables.end()) {
-        //
         auto q = std::make_shared<assign_quadruple>();
         q->out = std::get<1>(l->second);
         q->in = in;
@@ -113,6 +112,8 @@ void print_statement::write_intermediate(generation_context &ctx) {
         q->in = this->print_val->write_intermediate(ctx);
         q->type = this->val_type;
     }
+    
+    ctx.current_block->quadruples.push_back(q);
 }
 
 void scan_statement::write_intermediate(generation_context &ctx) {
@@ -120,6 +121,7 @@ void scan_statement::write_intermediate(generation_context &ctx) {
     auto q = std::make_shared<scan_quadruple>();
     q->out = out;
     q->type = this->val_type;
+    ctx.current_block->quadruples.push_back(q);
     write(ctx, out, identifier->text);
 }
 

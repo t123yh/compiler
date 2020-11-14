@@ -138,6 +138,7 @@ print_parser::return_type print_parser::parse(parsing_context &context) const {
         pt->has_val = true;
         pt->has_string = false;
         pt->print_val = context.expect_one(expression_parser());
+        pt->val_type = get_expression_type(pt->print_val.get(), context);
     } else {
         throw parsing_failure("Malformed print statement");
     }

@@ -85,7 +85,7 @@ void print_quadruple::generate_mips(std::vector<std::string> &output) {
         }
         output.emplace_back("syscall");
     }
-    output.emplace_back("li $a0, 0x20");
+    output.emplace_back("li $a0, 10");
     output.emplace_back("li $v0, 11");
     output.emplace_back("syscall");
 }
