@@ -35,6 +35,12 @@ void generation_context::insert_variable(var_def v) {
         out->const_value = v.value;
     } else if (v.array == var_def::SCALAR_VAR) {
         out->type = intermediate_variable::local;
+        auto ass = std::make_shared<assign_quadruple>();
+        ass->in = std::make_shared<intermediate_variable>();
+        ass->in->type = intermediate_variable::constant;
+        ass->in->const_value = v.value;
+        ass->out = out;
+        current_block->quadruples.push_back(ass);
     } else {
         throw std::logic_error("Not supported");
     }
