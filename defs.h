@@ -53,7 +53,7 @@ struct statement {
 
 struct assignment_statement : public statement {
     token_ptr identifier;
-    std::shared_ptr<expression> da, db, val;
+    std::shared_ptr<expression> idx1, idx2, val;
     void write_intermediate(generation_context &ctx) override;
 };
 
