@@ -8,8 +8,7 @@
 
 int main() {
     std::ifstream t("testfile.txt");
-    std::ofstream fout("output.txt");
-    std::ofstream eout("error.txt");
+    std::ofstream code("mips.txt");
     
     error_container errs;
     
@@ -21,13 +20,15 @@ int main() {
     
     auto result = tokenize(str, errs);
     
-    parsing_context ctx{.start = result.begin(), .current = result.begin(), .end = result.end(), .debug_output = fout, .strategy = FINAL, .errors = errs};
+    parsing_context ctx{.start = result.begin(), .current = result.begin(), .end = result.end(), .debug_output = nullstream, .strategy = FINAL, .errors = errs};
     try {
         program p = ctx.expect_one(program_parser());
         std::sort(errs.begin(), errs.end());
+        /*
         for (auto& err : errs) {
             eout << err.line << " " << (char)err.type << std::endl;
         }
+         */
     
         if (errs.empty()) {
             global_generation_context ggc{};
@@ -41,17 +42,17 @@ int main() {
             main_ctx.generate_mips(shit);
     
     
-            std::cout<< ".data" << std::endl;
+            code << ".data" << std::endl;
             for (auto& s : ggc.string_table) {
-                std::cout << std::get<0>(s) << ": .asciiz \"" << std::get<1>(s) << "\"" << std::endl;
+                code << std::get<0>(s) << ": .asciiz \"" << std::get<1>(s) << "\"" << std::endl;
             }
             for (auto& v : ggc.variables) {
-                std::cout << v.first << ": .word " << v.second.value << std::endl;
+                code << v.first << ": .word " << v.second.value << std::endl;
             }
             
-            std::cout<< ".text" << std::endl;
+            code << ".text" << std::endl;
             for (auto& x : shit) {
-                std::cout << x << std::endl;
+                code << x << std::endl;
             }
             asm("nop");
             // generation_context ctx;

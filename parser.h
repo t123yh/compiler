@@ -37,6 +37,7 @@ struct parser {
     virtual const char* get_name() const;
 };
 
+extern std::ofstream nullstream;
 
 struct parsing_context
 {
