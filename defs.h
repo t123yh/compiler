@@ -76,13 +76,14 @@ struct return_statement: public statement {
 struct print_statement: public statement {
     bool has_string, has_val;
     token_ptr print_content;
+    token_type_t val_type;
     std::shared_ptr<expression> print_val;
     void write_intermediate(generation_context &ctx) override;
 };
 
 struct scan_statement : public statement {
     token_ptr identifier;
-    
+    token_type_t val_type;
     void write_intermediate(generation_context &ctx) override;
 };
 

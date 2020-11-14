@@ -126,6 +126,7 @@ print_parser::return_type print_parser::parse(parsing_context &context) const {
         context.record("字符串");
         context.expect(token_parser<COMMA>());
         pt->print_val = context.expect_one(expression_parser());
+        pt->val_type = get_expression_type(pt->print_val.get(), context);
         pt->has_string = true;
         pt->has_val = true;
     } else if (context.match(token_parser<STRCON>())) {
@@ -156,6 +157,8 @@ scan_parser::return_type scan_parser::parse(parsing_context &context) const {
         context.errors.push_back(error{s->identifier->line, E_UNDEFINED_SYMBOL});
     } else if (sb->definition.array == var_def::CONST) {
         context.errors.push_back(error{s->identifier->line, E_ASSIGN_TO_CONST});
+    } else {
+        s->val_type = sb->definition.type;
     }
     context.record("读语句");
     return s;
