@@ -32,12 +32,18 @@ int main() {
         if (errs.empty()) {
             global_generation_context ggc;
             p.popluate_global_variables(ggc);
-            ggc.symbols.enter_layer();
-            generation_context main_ctx(ggc);
+            generation_context main_ctx(ggc, "main");
+            
             p.main_function.populate_variables(main_ctx);
             p.main_function.generate_statements(main_ctx);
-            ggc.symbols.pop_layer();
+            std::vector<std::string> shit;
+            main_ctx.assign_stack_space();
+            main_ctx.generate_mips(shit);
             
+            for (auto& x : shit) {
+                std::cout << x << std::endl;
+            }
+            asm("nop");
             // generation_context ctx;
         }
         

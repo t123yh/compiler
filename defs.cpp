@@ -6,43 +6,51 @@
 #include <memory>
 #include <stdexcept>
 #include "defs.h"
+#include "parsing_failure.h"
 
 std::shared_ptr<intermediate_variable> variable_access_expression::write_intermediate(generation_context &ctx) {
-    auto* s = dynamic_cast<variable_symbol*>(ctx.glob.symbols.find_symbol(name->text));
-    assert(s != nullptr);
-    if (s->definition.array == var_def::ARRAY_1D || s->definition.array == var_def::ARRAY_2D) {
-        throw std::logic_error("Array is not implemented");
-    } else if (s->definition.array == var_def::CONST) {
-        auto out = std::make_shared<temp_intermediate_variable>();
-        constant_quadruple q;
-        q.value = s->definition.value;
-        q.out = out;
-        ctx.current_block->quadruples.push_back(std::make_shared<quadruple>(q));
-        return out;
-    } else if (s->definition.array == var_def::PARAM || s->definition.array == var_def::SCALAR_VAR) {
-        return s->var;
+    auto l = ctx.variables.find(name->text);
+    if (l != ctx.variables.end()) {
+        if ((this->idx1) || (this->idx2)) {
+            throw std::logic_error("Array is not supported");
+        }
+        return std::get<1>(l->second);
     } else {
-        throw std::logic_error("WTF?");
+        auto g = ctx.glob.variables.find(name->text);
+        if (g == ctx.glob.variables.end())
+            throw parsing_failure("Variable not found");
+        if (g->second.array == var_def::SCALAR_VAR) {
+            auto v = ctx.new_temp_var();
+            auto q = std::make_shared<global_variable_access_quadruple>();
+            q->out = v;
+            q->name = name->text;
+            ctx.current_block->quadruples.push_back(q);
+            return v;
+        } else if (g->second.array == var_def::CONST) {
+            auto q = std::make_shared<intermediate_variable>();
+            q->type = intermediate_variable::constant;
+            q->const_value = g->second.value;
+            return q;
+        }
     }
+    throw std::logic_error("WTF?");
 }
 
 std::shared_ptr<intermediate_variable> constant_expression::write_intermediate(generation_context &ctx) {
-    auto out = std::make_shared<temp_intermediate_variable>();
-    constant_quadruple q;
-    q.value = this->val;
-    q.out = out;
-    ctx.current_block->quadruples.push_back(std::make_shared<quadruple>(q));
-    return out;
+    auto q = std::make_shared<intermediate_variable>();
+    q->type = intermediate_variable::constant;
+    q->const_value = this->val;
+    return q;
 }
 
 std::shared_ptr<intermediate_variable> calculate_expression::write_intermediate(generation_context &ctx) {
-    calculate_quadruple c;
-    auto out = std::make_shared<temp_intermediate_variable>();
-    c.op = this->op;
-    c.in1 = this->a->write_intermediate(ctx);
-    c.in2 = this->b->write_intermediate(ctx);
-    c.out = out;
-    ctx.current_block->quadruples.push_back(std::make_shared<quadruple>(c));
+    auto c = std::make_shared<calculate_quadruple>();
+    auto out = ctx.new_temp_var();
+    c->op = this->op;
+    c->in = this->a->write_intermediate(ctx);
+    c->in2 = this->b->write_intermediate(ctx);
+    c->out = out;
+    ctx.current_block->quadruples.push_back(c);
     return out;
 }
 
@@ -50,16 +58,36 @@ std::shared_ptr<intermediate_variable> calling_expression::write_intermediate(ge
     throw std::logic_error("Calling is not implemented");
 }
 
+static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname) {
+    auto l = ctx.variables.find(vname);
+    if (l != ctx.variables.end()) {
+        //
+        auto q = std::make_shared<assign_quadruple>();
+        q->out = std::get<1>(l->second);
+        q->in = in;
+        ctx.current_block->quadruples.push_back(q);
+    } else {
+        // global bar
+        auto g = ctx.glob.variables.find(vname);
+        if (g == ctx.glob.variables.end())
+            throw parsing_failure("Variable not found");
+        if (g->second.array == var_def::SCALAR_VAR) {
+            auto q = std::make_shared<global_variable_write_quadruple>();
+            q->in = in;
+            q->name = vname;
+            ctx.current_block->quadruples.push_back(q);
+        } else {
+            throw std::logic_error("Not supported");
+        }
+    }
+}
+
 void assignment_statement::write_intermediate(generation_context &ctx) {
-    if (da || db) {
+    if (idx1 || idx2) {
         throw std::logic_error("Array access is not implemented");
     }
-    auto q = std::make_shared<assign_quadruple>();
-    q->in = this->val->write_intermediate(ctx);
-    auto* s = dynamic_cast<variable_symbol*>(ctx.glob.symbols.find_symbol(this->identifier->text));
-    assert(s != nullptr);
-    q->out = s->var;
-    ctx.current_block->quadruples.push_back(q);
+    auto in = this->val->write_intermediate(ctx);
+    write(ctx, in, identifier->text);
 }
 
 void calling_statement::write_intermediate(generation_context &ctx) {
@@ -80,17 +108,19 @@ void print_statement::write_intermediate(generation_context &ctx) {
     if (this->has_string) {
         q->str_name = ctx.glob.new_string(this->print_content->text);
     }
+    
     if (this->has_val) {
         q->in = this->print_val->write_intermediate(ctx);
+        q->type = this->val_type;
     }
 }
 
 void scan_statement::write_intermediate(generation_context &ctx) {
+    auto out = ctx.new_temp_var();
     auto q = std::make_shared<scan_quadruple>();
-    auto* s = dynamic_cast<variable_symbol*>(ctx.glob.symbols.find_symbol(this->identifier->text));
-    assert(s != nullptr);
-    q->out = s->var;
-    ctx.current_block->quadruples.push_back(q);
+    q->out = out;
+    q->type = this->val_type;
+    write(ctx, out, identifier->text);
 }
 
 void block_statement::write_intermediate(generation_context &ctx) {
@@ -115,15 +145,7 @@ void while_statement::write_intermediate(generation_context &ctx) {
 
 void statement_block::populate_variables(generation_context &ctx) {
     for (auto& v : variables) {
-        if (v.array == var_def::CONST) {
-            ctx.glob.symbols.add_symbol(std::make_shared<variable_symbol>(v));
-        } else if (v.array == var_def::SCALAR_VAR) {
-            auto symb = std::make_shared<variable_symbol>(v);
-            symb->var = std::make_shared<variable_intermediate_variable>();
-            ctx.glob.symbols.add_symbol(symb);
-        } else {
-            throw std::logic_error("Array not impl");
-        }
+        ctx.insert_variable(v);
     }
 }
 
@@ -136,23 +158,12 @@ void statement_block::generate_statements(generation_context& ctx) {
 void function::populate_variables(generation_context &ctx) {
     for (auto& p : signature.parameters) {
         assert(p.array == var_def::PARAM);
-        auto symb = std::make_shared<variable_symbol>(p);
-        symb->var = std::make_shared<variable_intermediate_variable>();
-        ctx.glob.symbols.add_symbol(symb);
+        ctx.insert_parameter(p);
     }
 }
 
 void program::popluate_global_variables(global_generation_context& ggc) {
     for (auto& v : symbols) {
-        if (v.array == var_def::CONST) {
-            ggc.symbols.add_symbol(std::make_shared<variable_symbol>(v));
-        } else if (v.array == var_def::SCALAR_VAR) {
-            auto symb = std::make_shared<variable_symbol>(v);
-            symb->var = std::make_shared<global_intermediate_variable>();
-            ggc.symbols.add_symbol(symb);
-        } else {
-            throw std::logic_error("Array not impl");
-        }
+        ggc.variables.insert({v.identifier->text, v});
     }
-    
 }
