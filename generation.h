@@ -23,6 +23,14 @@ struct generation_context
     std::string name;
     
     int block_id = 0;
+    int max_arg_count = 4;
+    int local_variable_count = -1;
+    int save_reg_count = 0;
+    
+    int get_sp_offset(int stack_offset);
+    int save_ra_depth();
+    int stack_depth();
+    
     std::list<std::shared_ptr<quadruple_block>> blocks;
     std::shared_ptr<quadruple_block> current_block;
     
@@ -30,10 +38,10 @@ struct generation_context
     std::shared_ptr<intermediate_variable> new_temp_var();
     std::map<std::string, std::tuple<var_def, std::shared_ptr<intermediate_variable>>> variables;
     void insert_variable(var_def v);
-    void insert_parameter(var_def v);
+    void insert_parameter(var_def v, int i);
     
     void new_block();
-    int assign_stack_space();
+    void assign_stack_space();
     
     void generate_mips(std::vector<std::string>& result);
     

@@ -8,6 +8,8 @@
 #include <memory>
 #include "base_defs.h"
 
+struct generation_context;
+
 enum mips_reg_t {
     reg_zero = 0,
     reg_at = 1,
@@ -51,6 +53,7 @@ struct intermediate_variable
     enum type_t {local, temp, parameter, constant};
     type_t type;
     int stack_offset;
+    int parameter_index;
     int64_t const_value;
 };
 
@@ -62,46 +65,59 @@ struct global_variable
 
 struct quadruple
 {
+    generation_context& ctx;
+    quadruple(generation_context& ctx) : ctx(ctx) {}
     std::shared_ptr<intermediate_variable> out;
-    std::shared_ptr<intermediate_variable> in, in2;
+    // std::shared_ptr<intermediate_variable> in, in2;
+    std::vector<std::shared_ptr<intermediate_variable>> in_list;
     virtual void generate_mips(std::vector<std::string>& output) = 0;
     virtual ~quadruple() = default;
 };
 
 struct calculate_quadruple : quadruple {
     token_type_t op;
+    calculate_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct global_variable_access_quadruple : quadruple {
     std::string name;
+    global_variable_access_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct global_variable_write_quadruple : quadruple {
     std::string name;
+    global_variable_write_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct calling_quadruple : quadruple {
+    std::string function_name;
+    calling_quadruple(generation_context& ctx) : quadruple(ctx){}
+    void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct assign_quadruple : quadruple {
+    assign_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct return_quadruple : quadruple {
+    return_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct print_quadruple : quadruple {
     std::string str_name;
     token_type_t type;
+    print_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct scan_quadruple : quadruple {
     token_type_t type;
+    scan_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
@@ -110,6 +126,9 @@ struct quadruple_block {
     std::vector<std::shared_ptr<quadruple>> quadruples;
     std::weak_ptr<quadruple_block> next_block;
     std::weak_ptr<quadruple_block> next_block_2;
+    generation_context& ctx;
+    
+    quadruple_block(generation_context& ctx) : ctx(ctx){}
     
     void generate_mips(std::vector<std::string>& file);
 };

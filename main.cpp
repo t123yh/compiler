@@ -31,13 +31,24 @@ int main() {
          */
     
         if (errs.empty()) {
+            std::vector<std::string> shit;
             global_generation_context ggc{};
             p.popluate_global_variables(ggc);
+            
+            for (auto& f : p.functions) {
+                generation_context func_ctx(ggc, f->signature.identifier->text);
+                f->populate_variables(func_ctx);
+                f->statements.populate_variables(func_ctx);
+                f->statements.generate_statements(func_ctx);
+                
+                func_ctx.assign_stack_space();
+                func_ctx.generate_mips(shit);
+            }
+            
             generation_context main_ctx(ggc, "main");
             
             p.main_function.populate_variables(main_ctx);
             p.main_function.generate_statements(main_ctx);
-            std::vector<std::string> shit;
             main_ctx.assign_stack_space();
             main_ctx.generate_mips(shit);
     
@@ -51,6 +62,9 @@ int main() {
             }
             
             code << ".text" << std::endl;
+            code << "jal func_main" << std::endl;
+            code << "li $v0, 10" << std::endl;
+            code << "syscall" << std::endl;
             for (auto& x : shit) {
                 code << x << std::endl;
             }

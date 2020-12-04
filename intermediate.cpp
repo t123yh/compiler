@@ -4,19 +4,20 @@
 
 #include <stdexcept>
 #include "intermediate.h"
+#include "generation.h"
 
 void calculate_quadruple::generate_mips(std::vector<std::string> &output) {
     // TODO: 优化：如果一个变量是常数，则缩减为一条指令
     
-    if (in->type == intermediate_variable::constant) {
-        output.push_back("li $t8, " + std::to_string(in->const_value));
+    if (in_list[0]->type == intermediate_variable::constant) {
+        output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
     } else {
-        output.push_back("lw $t8, " + std::to_string(in->stack_offset) + "($sp)");
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
     }
-    if (in2->type == intermediate_variable::constant) {
-        output.push_back("li $t9, " + std::to_string(in2->const_value));
+    if (in_list[1]->type == intermediate_variable::constant) {
+        output.push_back("li $t9, " + std::to_string(in_list[1]->const_value));
     } else {
-        output.push_back("lw $t9, " + std::to_string(in2->stack_offset) + "($sp)");
+        output.push_back("lw $t9, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
     }
     
     switch (this->op) {
@@ -47,10 +48,10 @@ void calculate_quadruple::generate_mips(std::vector<std::string> &output) {
 }
 
 void assign_quadruple::generate_mips(std::vector<std::string> &output) {
-    if (in->type == intermediate_variable::constant) {
-        output.push_back("li $t8, " + std::to_string(in->const_value));
+    if (in_list[0]->type == intermediate_variable::constant) {
+        output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
     } else {
-        output.push_back("lw $t8, " + std::to_string(in->stack_offset) + "($sp)");
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
     }
     
     if (out->type == intermediate_variable::constant) {
@@ -61,7 +62,16 @@ void assign_quadruple::generate_mips(std::vector<std::string> &output) {
 }
 
 void return_quadruple::generate_mips(std::vector<std::string> &output) {
-    throw std::logic_error("No return");
+    if (this->in_list.size() > 0) {
+        if (in_list[0]->type == intermediate_variable::constant) {
+            output.push_back("li $v0, " + std::to_string(in_list[0]->const_value));
+        } else {
+            output.push_back("lw $v0, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+        }
+    }
+    output.push_back("lw $ra, " + std::to_string(ctx.save_ra_depth()) + "($sp)");
+    output.push_back("addiu $sp, $sp, " + std::to_string(ctx.stack_depth()));
+    output.emplace_back("jr $ra");
 }
 
 void print_quadruple::generate_mips(std::vector<std::string> &output) {
@@ -70,11 +80,11 @@ void print_quadruple::generate_mips(std::vector<std::string> &output) {
         output.emplace_back("li $v0, 4");
         output.emplace_back("syscall");
     }
-    if (this->in) {
-        if (in->type == intermediate_variable::constant) {
-            output.push_back("li $a0, " + std::to_string(in->const_value));
+    if (this->in_list.size() > 0) {
+        if (in_list[0]->type == intermediate_variable::constant) {
+            output.push_back("li $a0, " + std::to_string(in_list[0]->const_value));
         } else {
-            output.push_back("lw $a0, " + std::to_string(in->stack_offset) + "($sp)");
+            output.push_back("lw $a0, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
         }
         if (type == CHARTK) {
             output.emplace_back("li $v0, 11");
@@ -107,10 +117,10 @@ void scan_quadruple::generate_mips(std::vector<std::string> &output) {
 }
 
 void global_variable_write_quadruple::generate_mips(std::vector<std::string> &output) {
-    if (in->type == intermediate_variable::constant) {
-        output.push_back("li $t8, " + std::to_string(in->const_value));
+    if (in_list[0]->type == intermediate_variable::constant) {
+        output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
     } else {
-        output.push_back("lw $t8, " + std::to_string(in->stack_offset) + "($sp)");
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
     }
     output.push_back("sw $t8, " + this->name);
 }
@@ -127,5 +137,30 @@ void global_variable_access_quadruple::generate_mips(std::vector<std::string> &o
 void quadruple_block::generate_mips(std::vector<std::string> &file) {
     for (auto& i : quadruples) {
         i->generate_mips(file);
+    }
+}
+
+void calling_quadruple::generate_mips(std::vector<std::string> &output) {
+    for (int i = 0; i < this->in_list.size(); i++) {
+        if (i < 4) {
+            if (in_list[i]->type == intermediate_variable::constant) {
+                output.push_back("li $a" + std::to_string(i) + ", " + std::to_string(in_list[i]->const_value));
+            } else {
+                output.push_back("lw $a" + std::to_string(i) + ", " + std::to_string(in_list[i]->stack_offset) + "($sp)");
+            }
+        } else {
+            if (in_list[i]->type == intermediate_variable::constant) {
+                output.push_back("li $t8, " + std::to_string(in_list[i]->const_value));
+            } else {
+                output.push_back("lw $t8, " + std::to_string(in_list[i]->stack_offset) + "($sp)");
+            }
+            output.push_back("sw $t8, " + std::to_string(i * 4) + "($sp)");
+        }
+    }
+    
+    output.push_back("jal func_" + this->function_name);
+    
+    if (this->out) {
+        output.push_back("sw $v0, " + std::to_string(this->out->stack_offset) + "($sp)");
     }
 }

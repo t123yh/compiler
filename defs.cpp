@@ -21,7 +21,7 @@ std::shared_ptr<intermediate_variable> variable_access_expression::write_interme
             throw parsing_failure("Variable not found");
         if (g->second.array == var_def::SCALAR_VAR) {
             auto v = ctx.new_temp_var();
-            auto q = std::make_shared<global_variable_access_quadruple>();
+            auto q = std::make_shared<global_variable_access_quadruple>(ctx);
             q->out = v;
             q->name = name->text;
             ctx.current_block->quadruples.push_back(q);
@@ -44,26 +44,35 @@ std::shared_ptr<intermediate_variable> constant_expression::write_intermediate(g
 }
 
 std::shared_ptr<intermediate_variable> calculate_expression::write_intermediate(generation_context &ctx) {
-    auto c = std::make_shared<calculate_quadruple>();
+    auto c = std::make_shared<calculate_quadruple>(ctx);
     auto out = ctx.new_temp_var();
     c->op = this->op;
-    c->in = this->a->write_intermediate(ctx);
-    c->in2 = this->b->write_intermediate(ctx);
+    c->in_list.push_back(this->a->write_intermediate(ctx));
+    c->in_list.push_back(this->b->write_intermediate(ctx));
     c->out = out;
     ctx.current_block->quadruples.push_back(c);
     return out;
 }
 
 std::shared_ptr<intermediate_variable> calling_expression::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("Calling is not implemented");
+    auto c = std::make_shared<calling_quadruple>(ctx);
+    c->function_name = this->call_info->name->text;
+    ctx.max_arg_count = std::max(ctx.max_arg_count, (int)this->call_info->arguments.size());
+    for (auto& item : this->call_info->arguments) {
+        c->in_list.push_back(item->write_intermediate(ctx));
+    }
+    auto out = ctx.new_temp_var();
+    c->out = out;
+    ctx.current_block->quadruples.push_back(c);
+    return out;
 }
 
 static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname) {
     auto l = ctx.variables.find(vname);
     if (l != ctx.variables.end()) {
-        auto q = std::make_shared<assign_quadruple>();
+        auto q = std::make_shared<assign_quadruple>(ctx);
         q->out = std::get<1>(l->second);
-        q->in = in;
+        q->in_list.push_back(in);
         ctx.current_block->quadruples.push_back(q);
     } else {
         // global bar
@@ -71,8 +80,8 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
         if (g == ctx.glob.variables.end())
             throw parsing_failure("Variable not found");
         if (g->second.array == var_def::SCALAR_VAR) {
-            auto q = std::make_shared<global_variable_write_quadruple>();
-            q->in = in;
+            auto q = std::make_shared<global_variable_write_quadruple>(ctx);
+            q->in_list.push_back(in);
             q->name = vname;
             ctx.current_block->quadruples.push_back(q);
         } else {
@@ -90,26 +99,32 @@ void assignment_statement::write_intermediate(generation_context &ctx) {
 }
 
 void calling_statement::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("Not implemented");
+    auto c = std::make_shared<calling_quadruple>(ctx);
+    c->function_name = this->call_info->name->text;
+    ctx.max_arg_count = std::max(ctx.max_arg_count, (int)this->call_info->arguments.size());
+    for (auto& item : this->call_info->arguments) {
+        c->in_list.push_back(item->write_intermediate(ctx));
+    }
+    ctx.current_block->quadruples.push_back(c);
 }
 
 void empty_statement::write_intermediate(generation_context &ctx) {}
 
 void return_statement::write_intermediate(generation_context &ctx) {
-    auto q = std::make_shared<return_quadruple>();
-    q->out = this->val->write_intermediate(ctx);
+    auto q = std::make_shared<return_quadruple>(ctx);
+    q->in_list.push_back(this->val->write_intermediate(ctx));
     ctx.current_block->quadruples.push_back(q);
     ctx.new_block();
 }
 
 void print_statement::write_intermediate(generation_context &ctx) {
-    auto q = std::make_shared<print_quadruple>();
+    auto q = std::make_shared<print_quadruple>(ctx);
     if (this->has_string) {
         q->str_name = ctx.glob.new_string(this->print_content->text);
     }
     
     if (this->has_val) {
-        q->in = this->print_val->write_intermediate(ctx);
+        q->in_list.push_back(this->print_val->write_intermediate(ctx));
         q->type = this->val_type;
     }
     
@@ -118,7 +133,7 @@ void print_statement::write_intermediate(generation_context &ctx) {
 
 void scan_statement::write_intermediate(generation_context &ctx) {
     auto out = ctx.new_temp_var();
-    auto q = std::make_shared<scan_quadruple>();
+    auto q = std::make_shared<scan_quadruple>(ctx);
     q->out = out;
     q->type = this->val_type;
     ctx.current_block->quadruples.push_back(q);
@@ -155,12 +170,14 @@ void statement_block::generate_statements(generation_context& ctx) {
     for (auto& s : statements) {
         s->write_intermediate(ctx);
     }
+    ctx.current_block->quadruples.push_back(std::make_shared<return_quadruple>(ctx));
 }
 
 void function::populate_variables(generation_context &ctx) {
-    for (auto& p : signature.parameters) {
+    for (int i = 0; i < signature.parameters.size(); i++) {
+        auto& p = signature.parameters[i];
         assert(p.array == var_def::PARAM);
-        ctx.insert_parameter(p);
+        ctx.insert_parameter(p, i);
     }
 }
 
