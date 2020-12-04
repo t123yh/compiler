@@ -50,7 +50,8 @@ compound_statement_parser::return_type compound_statement_parser::parse(parsing_
             ret.variables.push_back(x);
         }
     }
-    ret.statements = context.expect_one(statements_parser());
+    auto statements = context.expect_one(statements_parser());
+    ret.statement = std::make_shared<block_statement>(std::move(statements));
     context.record("复合语句");
     return ret;
 }
@@ -169,7 +170,7 @@ function_parser::return_type function_parser::parse(parsing_context &context) co
             context.expect(token_parser<LBRACE>(), compound_statement_parser(), token_parser<RBRACE>()));
     
     std::vector<return_statement*> returns;
-    find_all_return(returns, func->statements.statements);
+    find_all_return(returns, func->statements.statement->statements);
     if (func->signature.return_type == VOIDTK) {
         for (auto* r : returns) {
             if (r->is_fucking_return || r->val != nullptr) {
@@ -209,7 +210,7 @@ main_function_parser::return_type main_function_parser::parse(parsing_context &c
     context.record("主函数");
     
     std::vector<return_statement*> returns;
-    find_all_return(returns, r.statements);
+    find_all_return(returns, r.statement->statements);
     for (auto* rt : returns) {
         if (rt->is_fucking_return || rt->val != nullptr) {
             context.errors.push_back(error{rt->line, E_RETURN_MISMATCH_FOR_VOID_FUNCTIONS});

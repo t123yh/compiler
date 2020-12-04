@@ -97,7 +97,7 @@ struct block_statement : public statement {
 struct statement_block {
     std::vector<var_def> variables;
     void populate_variables(generation_context& ctx);
-    std::vector<std::shared_ptr<statement>> statements;
+    std::shared_ptr<block_statement> statement;
     void generate_statements(generation_context& ctx);
 };
 

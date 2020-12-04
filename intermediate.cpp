@@ -3,6 +3,7 @@
 //
 
 #include <stdexcept>
+#include <cassert>
 #include "intermediate.h"
 #include "generation.h"
 
@@ -59,19 +60,6 @@ void assign_quadruple::generate_mips(std::vector<std::string> &output) {
     } else {
         output.push_back("sw $t8, " + std::to_string(out->stack_offset) + "($sp)");
     }
-}
-
-void return_quadruple::generate_mips(std::vector<std::string> &output) {
-    if (this->in_list.size() > 0) {
-        if (in_list[0]->type == intermediate_variable::constant) {
-            output.push_back("li $v0, " + std::to_string(in_list[0]->const_value));
-        } else {
-            output.push_back("lw $v0, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
-        }
-    }
-    output.push_back("lw $ra, " + std::to_string(ctx.save_ra_depth()) + "($sp)");
-    output.push_back("addiu $sp, $sp, " + std::to_string(ctx.stack_depth()));
-    output.emplace_back("jr $ra");
 }
 
 void print_quadruple::generate_mips(std::vector<std::string> &output) {
@@ -138,6 +126,8 @@ void quadruple_block::generate_mips(std::vector<std::string> &file) {
     for (auto& i : quadruples) {
         i->generate_mips(file);
     }
+    assert(this->eop);
+    this->eop->generate_mips(*this, file);
 }
 
 void calling_quadruple::generate_mips(std::vector<std::string> &output) {
@@ -163,4 +153,60 @@ void calling_quadruple::generate_mips(std::vector<std::string> &output) {
     if (this->out) {
         output.push_back("sw $v0, " + std::to_string(this->out->stack_offset) + "($sp)");
     }
+}
+
+void condition_exit::generate_mips(quadruple_block& blk, std::vector<std::string> &output) {
+    if (in_list[0]->type == intermediate_variable::constant) {
+        output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
+    } else {
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+    }
+    if (in_list[1]->type == intermediate_variable::constant) {
+        output.push_back("li $t9, " + std::to_string(in_list[1]->const_value));
+    } else {
+        output.push_back("lw $t9, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+    }
+    
+    std::string instr;
+    switch (this->comparator) {
+        case EQL:
+            instr = "beq";
+            break;
+        case NEQ:
+            instr = "bne";
+            break;
+        case LEQ:
+            instr = "ble";
+            break;
+        case LSS:
+            instr = "blt";
+            break;
+        case GEQ:
+            instr = "bge";
+            break;
+        case GRE:
+            instr = "bgt";
+            break;
+        default:
+            throw std::logic_error("Invalid comparator");
+    }
+    output.push_back(instr + " $t8, $t9, " + blk.next_blocks[0].lock()->block_name);
+    output.push_back("j " + blk.next_blocks[1].lock()->block_name);
+}
+
+void return_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &output) {
+    if (in_list.size() > 0) {
+        if (in_list[0]->type == intermediate_variable::constant) {
+            output.push_back("li $v0, " + std::to_string(in_list[0]->const_value));
+        } else {
+            output.push_back("lw $v0, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+        }
+    }
+    output.push_back("lw $ra, " + std::to_string(ctx.save_ra_depth()) + "($sp)");
+    output.push_back("addiu $sp, $sp, " + std::to_string(ctx.stack_depth()));
+    output.emplace_back("jr $ra");
+}
+
+void jump_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &output) {
+    output.push_back("j " + blk.next_blocks[0].lock()->block_name);
 }

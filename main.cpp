@@ -6,6 +6,17 @@
 #include "parser_program.h"
 #include "errors.h"
 
+std::string str_replace(
+        std::string& s,
+        const std::string& f,
+        const std::string& r)
+{
+    std::size_t pos = s.find(f);
+    if (pos == std::string::npos) return s;
+    return s.replace(pos, f.length(), r);
+}
+
+
 int main() {
     std::ifstream t("testfile.txt");
     std::ofstream code("mips.txt");
@@ -55,7 +66,9 @@ int main() {
     
             code << ".data" << std::endl;
             for (auto& s : ggc.string_table) {
-                code << std::get<0>(s) << ": .asciiz \"" << std::get<1>(s) << "\"" << std::endl;
+                
+                code << std::get<0>(s) << ": .asciiz \"" <<
+                        str_replace(std::get<1>(s), "\\", "\\\\") << "\"" << std::endl;
             }
             for (auto& v : ggc.variables) {
                 code << v.first << ": .word " << v.second.value << std::endl;

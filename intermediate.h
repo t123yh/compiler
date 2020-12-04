@@ -68,7 +68,6 @@ struct quadruple
     generation_context& ctx;
     quadruple(generation_context& ctx) : ctx(ctx) {}
     std::shared_ptr<intermediate_variable> out;
-    // std::shared_ptr<intermediate_variable> in, in2;
     std::vector<std::shared_ptr<intermediate_variable>> in_list;
     virtual void generate_mips(std::vector<std::string>& output) = 0;
     virtual ~quadruple() = default;
@@ -103,10 +102,6 @@ struct assign_quadruple : quadruple {
     void generate_mips(std::vector<std::string> &output) override;
 };
 
-struct return_quadruple : quadruple {
-    return_quadruple(generation_context& ctx) : quadruple(ctx){}
-    void generate_mips(std::vector<std::string> &output) override;
-};
 
 struct print_quadruple : quadruple {
     std::string str_name;
@@ -121,11 +116,42 @@ struct scan_quadruple : quadruple {
     void generate_mips(std::vector<std::string> &output) override;
 };
 
+struct quadruple_block;
+struct exit_op {
+    generation_context& ctx;
+    std::vector<std::shared_ptr<intermediate_variable>> in_list;
+    exit_op(generation_context& ctx): ctx(ctx){}
+    virtual void generate_mips(quadruple_block& blk, std::vector<std::string> &output) = 0;
+};
+
+struct condition_exit : exit_op {
+    condition_exit(generation_context& ctx) : exit_op(ctx){}
+    token_type_t comparator;
+    void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+};
+
+struct switch_exit : exit_op {
+    switch_exit(generation_context& ctx) : exit_op(ctx){}
+    std::vector<int64_t> value_table;
+    void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+};
+
+struct jump_exit : exit_op {
+    jump_exit(generation_context& ctx) : exit_op(ctx){}
+    void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+};
+
+struct return_exit : exit_op {
+    return_exit(generation_context& ctx) : exit_op(ctx){}
+    void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+};
+
 struct quadruple_block {
     std::string block_name;
     std::vector<std::shared_ptr<quadruple>> quadruples;
-    std::weak_ptr<quadruple_block> next_block;
-    std::weak_ptr<quadruple_block> next_block_2;
+    std::vector<std::weak_ptr<quadruple_block>> next_blocks;
+    std::shared_ptr<exit_op> eop;
+    
     generation_context& ctx;
     
     quadruple_block(generation_context& ctx) : ctx(ctx){}

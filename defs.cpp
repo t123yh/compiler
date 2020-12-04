@@ -111,9 +111,9 @@ void calling_statement::write_intermediate(generation_context &ctx) {
 void empty_statement::write_intermediate(generation_context &ctx) {}
 
 void return_statement::write_intermediate(generation_context &ctx) {
-    auto q = std::make_shared<return_quadruple>(ctx);
+    auto q = std::make_shared<return_exit>(ctx);
     q->in_list.push_back(this->val->write_intermediate(ctx));
-    ctx.current_block->quadruples.push_back(q);
+    ctx.current_block->eop = q;
     ctx.new_block();
 }
 
@@ -141,11 +141,44 @@ void scan_statement::write_intermediate(generation_context &ctx) {
 }
 
 void block_statement::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("Block not implemented");
+    for (auto& s : this->statements) {
+        s->write_intermediate(ctx);
+    }
 }
 
 void if_statement::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("If not implemented");
+    auto c1 = this->cond.exp1->write_intermediate(ctx);
+    auto c2 = this->cond.exp2->write_intermediate(ctx);
+    auto l = std::make_shared<condition_exit>(ctx);
+    l->comparator = this->cond.comparator;
+    l->in_list.push_back(c1);
+    l->in_list.push_back(c2);
+    std::shared_ptr<quadruple_block> cb = ctx.current_block;
+    cb->eop = l;
+    ctx.new_block();
+    auto ib = ctx.current_block;
+    this->if_body->write_intermediate(ctx);
+    cb->next_blocks.push_back(ib);
+    
+    std::shared_ptr<quadruple_block> eb{};
+    
+    if (this->else_body) {
+        ctx.new_block();
+        eb = ctx.current_block;
+        this->else_body->write_intermediate(ctx);
+        cb->next_blocks.push_back(eb);
+    }
+    
+    ctx.new_block();
+    ib->eop = std::make_shared<jump_exit>(ctx);
+    ib->next_blocks.push_back(ctx.current_block);
+    if (!this->else_body) {
+        cb->next_blocks.push_back(ctx.current_block);
+    }
+    if (eb) {
+        eb->eop = std::make_shared<jump_exit>(ctx);
+        eb->next_blocks.push_back(ctx.current_block);
+    }
 }
 
 void for_statement::write_intermediate(generation_context &ctx) {
@@ -167,10 +200,10 @@ void statement_block::populate_variables(generation_context &ctx) {
 }
 
 void statement_block::generate_statements(generation_context& ctx) {
-    for (auto& s : statements) {
-        s->write_intermediate(ctx);
+    statement->write_intermediate(ctx);
+    if (!ctx.current_block->eop) {
+        ctx.current_block->eop = std::make_shared<return_exit>(ctx);
     }
-    ctx.current_block->quadruples.push_back(std::make_shared<return_quadruple>(ctx));
 }
 
 void function::populate_variables(generation_context &ctx) {
