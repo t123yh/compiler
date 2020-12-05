@@ -274,10 +274,18 @@ void for_statement::write_intermediate(generation_context &ctx) {
     ass->val = cexp;
     ass->write_intermediate(ctx);
     
-    ctx.current_block->eop = l;
+    c1 = this->cond.exp1->write_intermediate(ctx);
+    c2 = this->cond.exp2->write_intermediate(ctx);
+    auto l_ = std::make_shared<condition_exit>(ctx);
+    l_->comparator = this->cond.comparator;
+    l_->in_list.push_back(c1);
+    l_->in_list.push_back(c2);
+    l_->pass_block = ib;
+    ctx.current_block->eop = l_;
     
     ctx.new_block();
     l->fail_block = ctx.current_block;
+    l_->fail_block = ctx.current_block;
 }
 
 void switch_statement::write_intermediate(generation_context &ctx) {
@@ -326,10 +334,19 @@ void while_statement::write_intermediate(generation_context &ctx) {
     ctx.new_block();
     l->pass_block = ctx.current_block;
     this->body->write_intermediate(ctx);
-    ctx.current_block->eop = l;
+    
+    c1 = this->cond.exp1->write_intermediate(ctx);
+    c2 = this->cond.exp2->write_intermediate(ctx);
+    auto l_ = std::make_shared<condition_exit>(ctx);
+    l_->comparator = this->cond.comparator;
+    l_->in_list.push_back(c1);
+    l_->in_list.push_back(c2);
+    l_->pass_block = ctx.current_block;
+    ctx.current_block->eop = l_;
     
     ctx.new_block();
     l->fail_block = ctx.current_block;
+    l_->fail_block = ctx.current_block;
 }
 
 void statement_block::populate_variables(generation_context &ctx) {
