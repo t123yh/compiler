@@ -25,8 +25,11 @@ parameter_list_parser::return_type parameter_list_parser::parse(parsing_context 
     if (!context.match(token_parser<RPARENT, LBRACE>())) { // LBRACE in case of missing RPARENT
         do {
             auto idf = context.expect(token_parser<INTTK, CHARTK>(), token_parser<IDENFR>());
-            ret.push_back(
-                    var_def{.array = var_def::PARAM, .type = std::get<0>(idf)->type, .identifier = std::get<1>(idf)});
+            var_def def;
+            def.array = var_def::PARAM;
+            def.type = std::get<0>(idf)->type;
+            def.identifier = std::get<1>(idf);
+            ret.push_back(def);
             if (context.strategy == FINAL) {
                 context.add_symbol(std::make_shared<variable_symbol>(ret.back()));
             }

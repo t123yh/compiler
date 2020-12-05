@@ -24,6 +24,8 @@ struct var_def
     type_t type;
     token_ptr identifier;
     int64_t value;
+    int dimen1 = -1, dimen2 = -1;
+    std::shared_ptr<std::vector<int64_t>> initialization = nullptr;
 };
 
 struct function_signature

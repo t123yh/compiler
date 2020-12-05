@@ -41,6 +41,8 @@ void generation_context::insert_variable(var_def v) {
         ass->in_list[0]->const_value = v.value;
         ass->out = out;
         current_block->quadruples.push_back(ass);
+    } else if (v.array == var_def::ARRAY_1D || v.array == var_def::ARRAY_2D) {
+        out->type = intermediate_variable::local;
     } else {
         throw std::logic_error("Not supported");
     }
@@ -51,9 +53,16 @@ void generation_context::assign_stack_space() {
     local_variable_count = temp_vars.size();
     for (auto &v : variables) {
         if (std::get<1>(v.second)->type == intermediate_variable::local) {
-            switch (std::get<0>(v.second).array) {
+            auto& def = std::get<0>(v.second);
+            switch (def.array) {
                 case var_def::SCALAR_VAR:
                     local_variable_count += 1;
+                    break;
+                case var_def::ARRAY_1D:
+                    local_variable_count += def.dimen1;
+                    break;
+                case var_def::ARRAY_2D:
+                    local_variable_count += def.dimen1 * def.dimen2;
                     break;
                 default:
                     throw std::logic_error("FUCKED");
@@ -65,10 +74,17 @@ void generation_context::assign_stack_space() {
     for (auto &v : variables) {
         auto t = std::get<1>(v.second)->type;
         if (t == intermediate_variable::local) {
-            switch (std::get<0>(v.second).array) {
+            auto& def = std::get<0>(v.second);
+            std::get<1>(v.second)->stack_offset = get_sp_offset(idx);
+            switch (def.array) {
                 case var_def::SCALAR_VAR:
-                    std::get<1>(v.second)->stack_offset = get_sp_offset(idx);
                     idx++;
+                    break;
+                case var_def::ARRAY_1D:
+                    idx += def.dimen1;
+                    break;
+                case var_def::ARRAY_2D:
+                    idx += def.dimen1 * def.dimen2;
                     break;
                 default:
                     throw std::logic_error("FUCKED");
@@ -89,6 +105,20 @@ void generation_context::generate_mips(std::vector<std::string> &result) {
     result.push_back("func_" + this->name + ":");
     result.push_back("addiu $sp, $sp, -" + std::to_string(this->stack_depth()));
     result.push_back("sw $ra, " + std::to_string(this->save_ra_depth()) + "($sp)");
+    for (auto &v : variables) {
+        auto def = std::get<0>(v.second);
+        auto iv = std::get<1>(v.second);
+        if (def.array == var_def::ARRAY_1D || def.array == var_def::ARRAY_2D) {
+            if (def.initialization) {
+                int off = iv->stack_offset;
+                for (int i = 0; i < def.initialization->size(); i++) {
+                    result.push_back("li $t8, " + std::to_string((*def.initialization)[i]));
+                    result.push_back("sw $t8, " + std::to_string(off + i * 4) + "($sp)");
+                }
+            }
+        }
+    }
+    
     for (int i = 0; i < 4; i++) {
         int depth = this->stack_depth() + i * 4;
         result.push_back("sw $a" + std::to_string(i) + ", " + std::to_string(depth) + "($sp)");
