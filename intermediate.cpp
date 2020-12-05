@@ -112,7 +112,7 @@ void global_variable_write_quadruple::generate_mips(std::vector<std::string> &ou
     }
     
     if (arr == var_def::SCALAR_VAR) {
-        output.push_back("sw $t9, " + this->name);
+        output.push_back("sw $t7, " + this->name);
     } if (arr == var_def::ARRAY_1D) {
         if (in_list[1]->type == intermediate_variable::constant) {
             output.push_back("li $t8, " + std::to_string(in_list[1]->const_value));
@@ -120,7 +120,7 @@ void global_variable_write_quadruple::generate_mips(std::vector<std::string> &ou
             output.push_back("lw $t8, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
         }
         output.emplace_back("sll $t8, $t8, 2");
-        output.push_back("sw $t9, " + this->name + "($t8)");
+        output.push_back("sw $t7, " + this->name + "($t8)");
     } else if (arr == var_def::ARRAY_2D) {
         if (in_list[2]->type == intermediate_variable::constant) {
             output.push_back("li $t8, " + std::to_string(in_list[2]->const_value));
