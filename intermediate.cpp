@@ -23,11 +23,11 @@ void calculate_quadruple::generate_mips(std::vector<std::string> &output) {
     
     switch (this->op) {
         case PLUS: {
-            output.emplace_back("add $t8, $t8, $t9");
+            output.emplace_back("addu $t8, $t8, $t9");
         }
             break;
         case MINU: {
-            output.emplace_back("sub $t8, $t8, $t9");
+            output.emplace_back("subu $t8, $t8, $t9");
         }
             break;
         case MULT: {
