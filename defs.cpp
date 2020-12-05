@@ -280,7 +280,7 @@ void for_statement::write_intermediate(generation_context &ctx) {
     l_->comparator = this->cond.comparator;
     l_->in_list.push_back(c1);
     l_->in_list.push_back(c2);
-    l_->pass_block = ib;
+    l_->pass_block = l->pass_block;
     ctx.current_block->eop = l_;
     
     ctx.new_block();
@@ -341,7 +341,7 @@ void while_statement::write_intermediate(generation_context &ctx) {
     l_->comparator = this->cond.comparator;
     l_->in_list.push_back(c1);
     l_->in_list.push_back(c2);
-    l_->pass_block = ctx.current_block;
+    l_->pass_block = l->pass_block;
     ctx.current_block->eop = l_;
     
     ctx.new_block();
