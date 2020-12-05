@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <signal.h>
+#include <unistd.h>
 #include "tokenizer.h"
 #include "parser.h"
 #include "parser_program.h"
@@ -104,9 +106,7 @@ int main() {
         
     } catch (parsing_failure& pf) {
         std::cout << "Failed to parse. reason: " << pf.reason << ". original program: " << std::endl;
-        for (auto& x : result) {
-            // fout << x.pretty_print();
-        }
+        kill(getpid(), SIGTRAP);
     }
     
     
