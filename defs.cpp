@@ -15,7 +15,7 @@ std::shared_ptr<intermediate_variable> variable_access_expression::write_interme
         auto& iv = std::get<1>(l->second);
         if (def.array == var_def::ARRAY_2D || def.array == var_def::ARRAY_1D) {
             auto v = ctx.new_temp_var();
-            auto a = std::make_shared<local_array_access_quadruple>(ctx);
+            auto a = std::make_shared<local_array_access_quadruple>(ctx, line);
             a->in_list.push_back(iv);
             a->arr = def.array;
             std::shared_ptr<intermediate_variable> im1, im2;
@@ -40,7 +40,7 @@ std::shared_ptr<intermediate_variable> variable_access_expression::write_interme
             throw parsing_failure("Variable not found");
         if (g->second.array == var_def::SCALAR_VAR || g->second.array == var_def::ARRAY_1D || g->second.array == var_def::ARRAY_2D) {
             auto v = ctx.new_temp_var();
-            auto q = std::make_shared<global_variable_access_quadruple>(ctx);
+            auto q = std::make_shared<global_variable_access_quadruple>(ctx, line);
             q->out = v;
             q->arr = g->second.array;
             q->name = name->text;
@@ -75,7 +75,7 @@ std::shared_ptr<intermediate_variable> constant_expression::write_intermediate(g
 }
 
 std::shared_ptr<intermediate_variable> calculate_expression::write_intermediate(generation_context &ctx) {
-    auto c = std::make_shared<calculate_quadruple>(ctx);
+    auto c = std::make_shared<calculate_quadruple>(ctx, line);
     auto out = ctx.new_temp_var();
     c->op = this->op;
     c->in_list.push_back(this->a->write_intermediate(ctx));
@@ -86,7 +86,7 @@ std::shared_ptr<intermediate_variable> calculate_expression::write_intermediate(
 }
 
 std::shared_ptr<intermediate_variable> calling_expression::write_intermediate(generation_context &ctx) {
-    auto c = std::make_shared<calling_quadruple>(ctx);
+    auto c = std::make_shared<calling_quadruple>(ctx, line);
     c->function_name = this->call_info->name->text;
     ctx.max_arg_count = std::max(ctx.max_arg_count, (int)this->call_info->arguments.size());
     for (auto& item : this->call_info->arguments) {
@@ -98,13 +98,13 @@ std::shared_ptr<intermediate_variable> calling_expression::write_intermediate(ge
     return out;
 }
 
-static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname, std::shared_ptr<expression> idx1, std::shared_ptr<expression> idx2) {
+static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname, std::shared_ptr<expression> idx1, std::shared_ptr<expression> idx2, int line) {
     auto l = ctx.variables.find(vname);
     if (l != ctx.variables.end()) {
         auto& def = std::get<0>(l->second);
         auto& iv = std::get<1>(l->second);
         if (def.array == var_def::ARRAY_1D || def.array == var_def::ARRAY_2D) {
-            auto q = std::make_shared<local_array_write_quadruple>(ctx);
+            auto q = std::make_shared<local_array_write_quadruple>(ctx, line);
             q->out = std::get<1>(l->second);
             q->arr = def.array;
             q->in_list.push_back(in);
@@ -120,7 +120,7 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
             }
             ctx.current_block->quadruples.push_back(q);
         } else {
-            auto q = std::make_shared<assign_quadruple>(ctx);
+            auto q = std::make_shared<assign_quadruple>(ctx, line);
             q->out = std::get<1>(l->second);
             q->in_list.push_back(in);
             ctx.current_block->quadruples.push_back(q);
@@ -131,13 +131,13 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
         if (g == ctx.glob.variables.end())
             throw parsing_failure("Variable not found");
         if (g->second.array == var_def::SCALAR_VAR) {
-            auto q = std::make_shared<global_variable_write_quadruple>(ctx);
+            auto q = std::make_shared<global_variable_write_quadruple>(ctx, line);
             q->in_list.push_back(in);
             q->arr = g->second.array;
             q->name = vname;
             ctx.current_block->quadruples.push_back(q);
         } else if (g->second.array == var_def::ARRAY_1D || g->second.array == var_def::ARRAY_2D) {
-            auto q = std::make_shared<global_variable_write_quadruple>(ctx);
+            auto q = std::make_shared<global_variable_write_quadruple>(ctx, line);
             q->in_list.push_back(in);
             q->arr = g->second.array;
             q->name = vname;
@@ -159,11 +159,11 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
 
 void assignment_statement::write_intermediate(generation_context &ctx) {
     auto in = this->val->write_intermediate(ctx);
-    write(ctx, in, identifier->text, idx1, idx2);
+    write(ctx, in, identifier->text, idx1, idx2, line);
 }
 
 void calling_statement::write_intermediate(generation_context &ctx) {
-    auto c = std::make_shared<calling_quadruple>(ctx);
+    auto c = std::make_shared<calling_quadruple>(ctx, line);
     c->function_name = this->call_info->name->text;
     ctx.max_arg_count = std::max(ctx.max_arg_count, (int)this->call_info->arguments.size());
     for (auto& item : this->call_info->arguments) {
@@ -175,7 +175,7 @@ void calling_statement::write_intermediate(generation_context &ctx) {
 void empty_statement::write_intermediate(generation_context &ctx) {}
 
 void return_statement::write_intermediate(generation_context &ctx) {
-    auto q = std::make_shared<return_exit>(ctx);
+    auto q = std::make_shared<return_exit>(ctx, line);
     if (this->val) {
         q->in_list.push_back(this->val->write_intermediate(ctx));
     }
@@ -184,7 +184,7 @@ void return_statement::write_intermediate(generation_context &ctx) {
 }
 
 void print_statement::write_intermediate(generation_context &ctx) {
-    auto q = std::make_shared<print_quadruple>(ctx);
+    auto q = std::make_shared<print_quadruple>(ctx, line);
     if (this->has_string) {
         q->str_name = ctx.glob.new_string(this->print_content->text);
     }
@@ -199,11 +199,11 @@ void print_statement::write_intermediate(generation_context &ctx) {
 
 void scan_statement::write_intermediate(generation_context &ctx) {
     auto out = ctx.new_temp_var();
-    auto q = std::make_shared<scan_quadruple>(ctx);
+    auto q = std::make_shared<scan_quadruple>(ctx, line);
     q->out = out;
     q->type = this->val_type;
     ctx.current_block->quadruples.push_back(q);
-    write(ctx, out, identifier->text, nullptr, nullptr);
+    write(ctx, out, identifier->text, nullptr, nullptr, line);
 }
 
 void block_statement::write_intermediate(generation_context &ctx) {
@@ -215,7 +215,7 @@ void block_statement::write_intermediate(generation_context &ctx) {
 void if_statement::write_intermediate(generation_context &ctx) {
     auto c1 = this->cond.exp1->write_intermediate(ctx);
     auto c2 = this->cond.exp2->write_intermediate(ctx);
-    auto l = std::make_shared<condition_exit>(ctx);
+    auto l = std::make_shared<condition_exit>(ctx, line);
     l->comparator = this->cond.comparator;
     l->in_list.push_back(c1);
     l->in_list.push_back(c2);
@@ -236,7 +236,7 @@ void if_statement::write_intermediate(generation_context &ctx) {
     }
     
     ctx.new_block();
-    auto exit = std::make_shared<jump_exit>(ctx);
+    auto exit = std::make_shared<jump_exit>(ctx, line);
     exit->next_block = ctx.current_block;
     ib->eop = exit;
     if (!eb) {
@@ -248,11 +248,11 @@ void if_statement::write_intermediate(generation_context &ctx) {
 
 void for_statement::write_intermediate(generation_context &ctx) {
     auto iexp = initial_exp->write_intermediate(ctx);
-    write(ctx, iexp, initial_var->text, nullptr, nullptr);
+    write(ctx, iexp, initial_var->text, nullptr, nullptr, line);
     
     auto c1 = this->cond.exp1->write_intermediate(ctx);
     auto c2 = this->cond.exp2->write_intermediate(ctx);
-    auto l = std::make_shared<condition_exit>(ctx);
+    auto l = std::make_shared<condition_exit>(ctx, line);
     l->comparator = this->cond.comparator;
     l->in_list.push_back(c1);
     l->in_list.push_back(c2);
@@ -276,7 +276,7 @@ void for_statement::write_intermediate(generation_context &ctx) {
     
     c1 = this->cond.exp1->write_intermediate(ctx);
     c2 = this->cond.exp2->write_intermediate(ctx);
-    auto l_ = std::make_shared<condition_exit>(ctx);
+    auto l_ = std::make_shared<condition_exit>(ctx, line);
     l_->comparator = this->cond.comparator;
     l_->in_list.push_back(c1);
     l_->in_list.push_back(c2);
@@ -290,7 +290,7 @@ void for_statement::write_intermediate(generation_context &ctx) {
 
 void switch_statement::write_intermediate(generation_context &ctx) {
     auto val = this->exp->write_intermediate(ctx);
-    auto l = std::make_shared<switch_exit>(ctx);
+    auto l = std::make_shared<switch_exit>(ctx, line);
     l->in_list.push_back(val);
     ctx.current_block->eop = l;
     
@@ -315,7 +315,7 @@ void switch_statement::write_intermediate(generation_context &ctx) {
     if (!default_body) {
         l->default_block = ctx.current_block;
     }
-    auto exit = std::make_shared<jump_exit>(ctx);
+    auto exit = std::make_shared<jump_exit>(ctx, line);
     exit->next_block = ctx.current_block;
     for (const auto& b : blocks) {
         b->eop = exit;
@@ -325,7 +325,7 @@ void switch_statement::write_intermediate(generation_context &ctx) {
 void while_statement::write_intermediate(generation_context &ctx) {
     auto c1 = this->cond.exp1->write_intermediate(ctx);
     auto c2 = this->cond.exp2->write_intermediate(ctx);
-    auto l = std::make_shared<condition_exit>(ctx);
+    auto l = std::make_shared<condition_exit>(ctx, line);
     l->comparator = this->cond.comparator;
     l->in_list.push_back(c1);
     l->in_list.push_back(c2);
@@ -337,7 +337,7 @@ void while_statement::write_intermediate(generation_context &ctx) {
     
     c1 = this->cond.exp1->write_intermediate(ctx);
     c2 = this->cond.exp2->write_intermediate(ctx);
-    auto l_ = std::make_shared<condition_exit>(ctx);
+    auto l_ = std::make_shared<condition_exit>(ctx, line);
     l_->comparator = this->cond.comparator;
     l_->in_list.push_back(c1);
     l_->in_list.push_back(c2);
@@ -358,7 +358,7 @@ void statement_block::populate_variables(generation_context &ctx) {
 void statement_block::generate_statements(generation_context& ctx) {
     statement->write_intermediate(ctx);
     if (!ctx.current_block->eop) {
-        ctx.current_block->eop = std::make_shared<return_exit>(ctx);
+        ctx.current_block->eop = std::make_shared<return_exit>(ctx, -1);
     }
 }
 

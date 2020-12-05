@@ -18,6 +18,7 @@ if_parser::return_type if_parser::parse(parsing_context &context) const {
             token_parser<RPARENT>(),
             statement_parser()
     );
+    ret->line = std::get<0>(s1)->line;
     ret->cond = std::move(std::get<2>(s1));
     ret->if_body = std::move(std::get<4>(s1));
     if (context.parse_if_match(token_parser<ELSETK>())) {
@@ -51,6 +52,7 @@ while_parser::return_type while_parser::parse(parsing_context &context) const {
             token_parser<RPARENT>(),
             statement_parser()
     );
+    ret->line = std::get<0>(s1)->line;
     ret->cond = std::move(std::get<2>(s1));
     ret->body = std::move(std::get<4>(s1));
     context.record("循环语句");
@@ -79,6 +81,7 @@ for_parser::return_type for_parser::parse(parsing_context &context) const {
             statement_parser()          // 9
     );
     auto ret = std::shared_ptr<for_statement>(new for_statement);
+    ret->line = std::get<0>(s1)->line;
     ret->initial_var = std::get<2>(s1);
     ret->initial_exp = std::move(std::get<4>(s1));
     ret->cond = std::move(std::get<1>(s2));
@@ -116,6 +119,7 @@ switch_parser::return_type switch_parser::parse(parsing_context &context) const 
             token_parser<LBRACE>()      // 4
     );
     
+    u->line = std::get<0>(par)->line;
     u->exp = std::move(std::get<2>(par));
     u->conditions = context.expect_one(switch_cond_table_parser(get_expression_type(u->exp.get(), context)));
     if (context.match(token_parser<DEFAULTTK>())) {

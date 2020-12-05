@@ -9,6 +9,7 @@
 #include "generation.h"
 
 struct expression {
+    int line = -1;
     virtual ~expression() = default;
     virtual std::shared_ptr<intermediate_variable> write_intermediate(generation_context& ctx) = 0;
 };
@@ -20,10 +21,9 @@ struct variable_access_expression : public expression {
 };
 
 struct constant_expression : public expression {
-    constant_expression(int64_t v, token_type_t type, int line) : val(v), type(type), line(line) {}
+    constant_expression(int64_t v, token_type_t type, int line) : val(v), type(type) {expression::line = line;}
     int64_t val;
     token_type_t type; // CHARCON or INTCON
-    int line;
     std::shared_ptr<intermediate_variable> write_intermediate(generation_context& ctx) override;
 };
 
@@ -46,7 +46,7 @@ struct calling_expression : public expression {
 
 
 struct statement {
-    int line;
+    int line = -1;
     virtual ~statement() = default;
     virtual void write_intermediate(generation_context& ctx) = 0;
 };

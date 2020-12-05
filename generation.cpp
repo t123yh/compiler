@@ -35,7 +35,7 @@ void generation_context::insert_variable(var_def v) {
         out->const_value = v.value;
     } else if (v.array == var_def::SCALAR_VAR) {
         out->type = intermediate_variable::local;
-        auto ass = std::make_shared<assign_quadruple>(*this);
+        auto ass = std::make_shared<assign_quadruple>(*this, -1);
         ass->in_list.push_back(std::make_shared<intermediate_variable>());
         ass->in_list[0]->type = intermediate_variable::constant;
         ass->in_list[0]->const_value = v.value;

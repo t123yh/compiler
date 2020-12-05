@@ -22,6 +22,7 @@ expression_parser::return_type expression_parser::parse(parsing_context &context
     
     while (context.match(token_parser<PLUS, MINU>())) {
         std::shared_ptr<calculate_expression> new_exp = std::shared_ptr<calculate_expression>(new calculate_expression);
+        new_exp->line = context.line();
         new_exp->a = std::move(current);
         auto t = context.expect_one(token_parser<PLUS, MINU>());
         new_exp->op = t->type;
@@ -38,6 +39,7 @@ term_parser::return_type term_parser::parse(parsing_context &context) const {
     current = context.expect_one(factor_parser());
     while (true) {
         std::shared_ptr<calculate_expression> new_exp = std::shared_ptr<calculate_expression>(new calculate_expression);
+        new_exp->line = context.line();
         if (context.match(token_parser<MULT, DIV>())) {
             new_exp->op = context.expect_one(token_parser<MULT, DIV>())->type;
         } else {
@@ -55,10 +57,12 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
     std::shared_ptr<expression> r;
     if (context.match(token_parser<IDENFR>(), token_parser<LPARENT>())) {
         auto e = std::shared_ptr<calling_expression>(new calling_expression);
+        e->line = context.line();
         e->call_info = context.expect_one(calling_parser());
         r = std::move(e);
     } else if (context.match(token_parser<IDENFR>())) {
         auto ret = std::shared_ptr<variable_access_expression>(new variable_access_expression);
+        ret->line = context.line();
         ret->name = context.expect_one(token_parser<IDENFR>());
         if (context.strategy == FINAL) {
             auto* symb = dynamic_cast<variable_symbol*>(context.symbols.find_symbol(ret->name->text));
@@ -79,11 +83,14 @@ factor_parser::return_type factor_parser::parse(parsing_context &context) const 
     } else if (context.match(token_parser<CHARCON>())) {
         r = std::shared_ptr<constant_expression>(
                 new constant_expression(context.expect_one(token_parser<CHARCON>())->text[0], CHARCON, context.line()));
+        r->line = context.line();
     } else if (context.match(integer_parser())) {
         r = std::shared_ptr<constant_expression>(
                 new constant_expression(context.expect_one(integer_parser()), INTCON, context.line()));
+        r->line = context.line();
     } else if (context.parse_if_match(token_parser<LPARENT>())) {
         r = std::get<0>(context.expect(expression_parser(), token_parser<RPARENT>(true)));
+        r->line = context.line();
     } else {
         throw parsing_failure("Invalid factor");
     }
