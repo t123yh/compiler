@@ -182,7 +182,37 @@ void if_statement::write_intermediate(generation_context &ctx) {
 }
 
 void for_statement::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("For not implemented");
+    auto iexp = initial_exp->write_intermediate(ctx);
+    write(ctx, iexp, initial_var->text);
+    
+    auto c1 = this->cond.exp1->write_intermediate(ctx);
+    auto c2 = this->cond.exp2->write_intermediate(ctx);
+    auto l = std::make_shared<condition_exit>(ctx);
+    l->comparator = this->cond.comparator;
+    l->in_list.push_back(c1);
+    l->in_list.push_back(c2);
+    ctx.current_block->eop = l;
+    
+    ctx.new_block();
+    auto ib = ctx.current_block;
+    this->body->write_intermediate(ctx);
+    
+    auto v1 = std::make_shared<variable_access_expression>();
+    v1->name = this->step_get_var;
+    auto cexp = std::make_shared<calculate_expression>();
+    cexp->a = v1;
+    cexp->op = PLUS;
+    cexp->b = std::make_shared<constant_expression>(this->step_len, INTCON, -1);
+    auto ass = std::make_shared<assignment_statement>();
+    ass->identifier = this->step_set_var;
+    ass->val = cexp;
+    ass->write_intermediate(ctx);
+    
+    l->pass_block = ib;
+    ib->eop = l;
+    
+    ctx.new_block();
+    l->fail_block = ctx.current_block;
 }
 
 void switch_statement::write_intermediate(generation_context &ctx) {
@@ -201,6 +231,8 @@ void while_statement::write_intermediate(generation_context &ctx) {
     ctx.new_block();
     auto ib = ctx.current_block;
     this->body->write_intermediate(ctx);
+    
+    
     l->pass_block = ib;
     ib->eop = l;
     
