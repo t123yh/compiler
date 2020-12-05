@@ -54,19 +54,7 @@ void generation_context::assign_stack_space() {
     for (auto &v : variables) {
         if (std::get<1>(v.second)->type == intermediate_variable::local) {
             auto& def = std::get<0>(v.second);
-            switch (def.array) {
-                case var_def::SCALAR_VAR:
-                    local_variable_count += 1;
-                    break;
-                case var_def::ARRAY_1D:
-                    local_variable_count += def.dimen1;
-                    break;
-                case var_def::ARRAY_2D:
-                    local_variable_count += def.dimen1 * def.dimen2;
-                    break;
-                default:
-                    throw std::logic_error("FUCKED");
-            }
+            local_variable_count += def.get_size();
         }
     }
     
@@ -76,19 +64,7 @@ void generation_context::assign_stack_space() {
         if (t == intermediate_variable::local) {
             auto& def = std::get<0>(v.second);
             std::get<1>(v.second)->stack_offset = get_sp_offset(idx);
-            switch (def.array) {
-                case var_def::SCALAR_VAR:
-                    idx++;
-                    break;
-                case var_def::ARRAY_1D:
-                    idx += def.dimen1;
-                    break;
-                case var_def::ARRAY_2D:
-                    idx += def.dimen1 * def.dimen2;
-                    break;
-                default:
-                    throw std::logic_error("FUCKED");
-            }
+            idx += def.get_size();
         } else if (t == intermediate_variable::parameter) {
             std::get<1>(v.second)->stack_offset = stack_depth() + std::get<1>(v.second)->parameter_index * 4;
         } else {

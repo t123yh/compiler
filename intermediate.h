@@ -81,13 +81,31 @@ struct calculate_quadruple : quadruple {
 
 struct global_variable_access_quadruple : quadruple {
     std::string name;
+    var_def::arr_desc_t arr;
+    int dimen;
     global_variable_access_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 
 struct global_variable_write_quadruple : quadruple {
     std::string name;
+    var_def::arr_desc_t arr;
+    int dimen;
     global_variable_write_quadruple(generation_context& ctx) : quadruple(ctx){}
+    void generate_mips(std::vector<std::string> &output) override;
+};
+
+struct local_array_access_quadruple : quadruple {
+    var_def::arr_desc_t arr;
+    int dimen;
+    local_array_access_quadruple(generation_context& ctx) : quadruple(ctx){}
+    void generate_mips(std::vector<std::string> &output) override;
+};
+
+struct local_array_write_quadruple : quadruple {
+    var_def::arr_desc_t arr;
+    int dimen;
+    local_array_write_quadruple(generation_context& ctx) : quadruple(ctx){}
     void generate_mips(std::vector<std::string> &output) override;
 };
 

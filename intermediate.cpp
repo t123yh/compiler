@@ -106,20 +106,71 @@ void scan_quadruple::generate_mips(std::vector<std::string> &output) {
 
 void global_variable_write_quadruple::generate_mips(std::vector<std::string> &output) {
     if (in_list[0]->type == intermediate_variable::constant) {
-        output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
+        output.push_back("li $t7, " + std::to_string(in_list[0]->const_value));
     } else {
-        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+        output.push_back("lw $t7, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
     }
-    output.push_back("sw $t8, " + this->name);
+    
+    if (arr == var_def::SCALAR_VAR) {
+        output.push_back("sw $t9, " + this->name);
+    } if (arr == var_def::ARRAY_1D) {
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("sll $t8, $t8, 2");
+        output.push_back("sw $t9, " + this->name + "($t8)");
+    } else if (arr == var_def::ARRAY_2D) {
+        if (in_list[2]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[2]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[2]->stack_offset) + "($sp)");
+        }
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t9, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t9, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("mul $t9, $t9, " + std::to_string(dimen));
+        output.emplace_back("addu $t8, $t9, $t8");
+        output.emplace_back("sll $t8, $t8, 2");
+        output.push_back("sw $t7, " + this->name + "($t8)");
+    }
 }
 
 void global_variable_access_quadruple::generate_mips(std::vector<std::string> &output) {
-    output.push_back("lw $t8, " + this->name);
+    if (arr == var_def::SCALAR_VAR) {
+        output.push_back("lw $t8, " + this->name);
+    } else if (arr == var_def::ARRAY_1D) {
+        if (in_list[0]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("sll $t8, $t8, 2");
+        output.push_back("lw $t8, " + this->name + "($t8)");
+    } else if (arr == var_def::ARRAY_2D) {
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        if (in_list[0]->type == intermediate_variable::constant) {
+            output.push_back("li $t9, " + std::to_string(in_list[0]->const_value));
+        } else {
+            output.push_back("lw $t9, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("mul $t9, $t9, " + std::to_string(dimen));
+        output.emplace_back("addu $t8, $t9, $t8");
+        output.emplace_back("sll $t8, $t8, 2");
+        output.push_back("lw $t8, " + this->name + "($t8)");
+    }
+    
     if (out->type == intermediate_variable::constant) {
         throw std::logic_error("Cannot assign to const");
-    } else {
-        output.push_back("sw $t8, " + std::to_string(out->stack_offset) + "($sp)");
     }
+    output.push_back("sw $t8, " + std::to_string(out->stack_offset) + "($sp)");
 }
 
 void quadruple_block::generate_mips(std::vector<std::string> &file) {
@@ -243,4 +294,74 @@ void switch_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &
         output.push_back("beq $t8, " + std::to_string(c.first) + ", " + c.second.lock()->block_name);
     }
     output.push_back("j " + default_block.lock()->block_name);
+}
+
+void local_array_access_quadruple::generate_mips(std::vector<std::string> &output) {
+    if (arr == var_def::ARRAY_1D) {
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("sll $t8, $t8, 2");
+        output.emplace_back("addu $t8, $t8, $sp");
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($t8)");
+    } else if (arr == var_def::ARRAY_2D) {
+        if (in_list[2]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[2]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[2]->stack_offset) + "($sp)");
+        }
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t9, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t9, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("mul $t9, $t9, " + std::to_string(dimen));
+        output.emplace_back("addu $t8, $t9, $t8");
+        output.emplace_back("sll $t8, $t8, 2");
+        output.emplace_back("addu $t8, $t8, $sp");
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($t8)");
+    } else {
+        throw std::logic_error("written some shit?");
+    }
+    
+    output.push_back("sw $t8, " + std::to_string(out->stack_offset) + "($sp)");
+}
+
+void local_array_write_quadruple::generate_mips(std::vector<std::string> &output) {
+    if (in_list[0]->type == intermediate_variable::constant) {
+        output.push_back("li $t7, " + std::to_string(in_list[0]->const_value));
+    } else {
+        output.push_back("lw $t7, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+    }
+    
+    if (arr == var_def::ARRAY_1D) {
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("sll $t8, $t8, 2");
+        output.emplace_back("addu $t8, $t8, $sp");
+        output.push_back("sw $t7, " + std::to_string(out->stack_offset) + "($t8)");
+    } else if (arr == var_def::ARRAY_2D) {
+        if (in_list[2]->type == intermediate_variable::constant) {
+            output.push_back("li $t8, " + std::to_string(in_list[2]->const_value));
+        } else {
+            output.push_back("lw $t8, " + std::to_string(in_list[2]->stack_offset) + "($sp)");
+        }
+        if (in_list[1]->type == intermediate_variable::constant) {
+            output.push_back("li $t9, " + std::to_string(in_list[1]->const_value));
+        } else {
+            output.push_back("lw $t9, " + std::to_string(in_list[1]->stack_offset) + "($sp)");
+        }
+        output.emplace_back("mul $t9, $t9, " + std::to_string(dimen));
+        output.emplace_back("addu $t8, $t9, $t8");
+        output.emplace_back("sll $t8, $t8, 2");
+        output.emplace_back("addu $t8, $t8, $sp");
+        output.push_back("sw $t7, " + std::to_string(out->stack_offset) + "($t8)");
+    } else {
+        throw std::logic_error("written some shit?");
+    }
 }

@@ -26,6 +26,16 @@ struct var_def
     int64_t value;
     int dimen1 = -1, dimen2 = -1;
     std::shared_ptr<std::vector<int64_t>> initialization = nullptr;
+    
+    int get_size() {
+        if (array == ARRAY_1D) {
+            return dimen1;
+        }
+        if (array == ARRAY_2D) {
+            return dimen1 * dimen2;
+        }
+        return 1;
+    }
 };
 
 struct function_signature

@@ -11,19 +11,50 @@
 std::shared_ptr<intermediate_variable> variable_access_expression::write_intermediate(generation_context &ctx) {
     auto l = ctx.variables.find(name->text);
     if (l != ctx.variables.end()) {
-        if ((this->idx1) || (this->idx2)) {
-            throw std::logic_error("Array is not supported");
+        auto& def = std::get<0>(l->second);
+        auto& iv = std::get<1>(l->second);
+        if (def.array == var_def::ARRAY_2D || def.array == var_def::ARRAY_1D) {
+            auto v = ctx.new_temp_var();
+            auto a = std::make_shared<local_array_access_quadruple>(ctx);
+            a->in_list.push_back(iv);
+            a->arr = def.array;
+            std::shared_ptr<intermediate_variable> im1, im2;
+            assert(this->idx1);
+            im1 = this->idx1->write_intermediate(ctx);
+            a->in_list.push_back(im1);
+            a->out = v;
+            if (def.array == var_def::ARRAY_2D) {
+                a->dimen = def.dimen1;
+                assert(this->idx2);
+                im2 = this->idx2->write_intermediate(ctx);
+                a->in_list.push_back(im2);
+            }
+            ctx.current_block->quadruples.push_back(a);
+            return v;
+        } else {
+            return iv;
         }
-        return std::get<1>(l->second);
     } else {
         auto g = ctx.glob.variables.find(name->text);
         if (g == ctx.glob.variables.end())
             throw parsing_failure("Variable not found");
-        if (g->second.array == var_def::SCALAR_VAR) {
+        if (g->second.array == var_def::SCALAR_VAR || g->second.array == var_def::ARRAY_1D || g->second.array == var_def::ARRAY_2D) {
             auto v = ctx.new_temp_var();
             auto q = std::make_shared<global_variable_access_quadruple>(ctx);
             q->out = v;
+            q->arr = g->second.array;
             q->name = name->text;
+            if (g->second.array == var_def::ARRAY_1D || g->second.array == var_def::ARRAY_2D) {
+                assert(this->idx1);
+                auto im1 = this->idx1->write_intermediate(ctx);
+                q->in_list.push_back(im1);
+            }
+            if (g->second.array == var_def::ARRAY_2D) {
+                q->dimen = g->second.dimen1;
+                assert(this->idx2);
+                auto im2 = this->idx2->write_intermediate(ctx);
+                q->in_list.push_back(im2);
+            }
             ctx.current_block->quadruples.push_back(q);
             return v;
         } else if (g->second.array == var_def::CONST) {
@@ -67,13 +98,33 @@ std::shared_ptr<intermediate_variable> calling_expression::write_intermediate(ge
     return out;
 }
 
-static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname) {
+static void write(generation_context& ctx, const std::shared_ptr<intermediate_variable>& in, const std::string& vname, std::shared_ptr<expression> idx1, std::shared_ptr<expression> idx2) {
     auto l = ctx.variables.find(vname);
     if (l != ctx.variables.end()) {
-        auto q = std::make_shared<assign_quadruple>(ctx);
-        q->out = std::get<1>(l->second);
-        q->in_list.push_back(in);
-        ctx.current_block->quadruples.push_back(q);
+        auto& def = std::get<0>(l->second);
+        auto& iv = std::get<1>(l->second);
+        if (def.array == var_def::ARRAY_1D || def.array == var_def::ARRAY_2D) {
+            auto q = std::make_shared<local_array_write_quadruple>(ctx);
+            q->out = std::get<1>(l->second);
+            q->arr = def.array;
+            q->in_list.push_back(in);
+            std::shared_ptr<intermediate_variable> im1, im2;
+            assert(idx1);
+            im1 = idx1->write_intermediate(ctx);
+            q->in_list.push_back(im1);
+            if (def.array == var_def::ARRAY_2D) {
+                assert(idx2);
+                im2 = idx2->write_intermediate(ctx);
+                q->dimen = def.dimen1;
+                q->in_list.push_back(im2);
+            }
+            ctx.current_block->quadruples.push_back(q);
+        } else {
+            auto q = std::make_shared<assign_quadruple>(ctx);
+            q->out = std::get<1>(l->second);
+            q->in_list.push_back(in);
+            ctx.current_block->quadruples.push_back(q);
+        }
     } else {
         // global bar
         auto g = ctx.glob.variables.find(vname);
@@ -82,20 +133,33 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
         if (g->second.array == var_def::SCALAR_VAR) {
             auto q = std::make_shared<global_variable_write_quadruple>(ctx);
             q->in_list.push_back(in);
+            q->arr = g->second.array;
             q->name = vname;
             ctx.current_block->quadruples.push_back(q);
-        } else {
-            throw std::logic_error("Not supported");
+        } else if (g->second.array == var_def::ARRAY_1D || g->second.array == var_def::ARRAY_2D) {
+            auto q = std::make_shared<global_variable_write_quadruple>(ctx);
+            q->in_list.push_back(in);
+            q->arr = g->second.array;
+            q->name = vname;
+            if (g->second.array == var_def::ARRAY_1D || g->second.array == var_def::ARRAY_2D) {
+                assert(idx1);
+                auto im1 = idx1->write_intermediate(ctx);
+                q->in_list.push_back(im1);
+            }
+            if (g->second.array == var_def::ARRAY_2D) {
+                q->dimen = g->second.dimen1;
+                assert(idx2);
+                auto im2 = idx2->write_intermediate(ctx);
+                q->in_list.push_back(im2);
+            }
+            ctx.current_block->quadruples.push_back(q);
         }
     }
 }
 
 void assignment_statement::write_intermediate(generation_context &ctx) {
-    if (idx1 || idx2) {
-        throw std::logic_error("Array access is not implemented");
-    }
     auto in = this->val->write_intermediate(ctx);
-    write(ctx, in, identifier->text);
+    write(ctx, in, identifier->text, idx1, idx2);
 }
 
 void calling_statement::write_intermediate(generation_context &ctx) {
@@ -137,7 +201,7 @@ void scan_statement::write_intermediate(generation_context &ctx) {
     q->out = out;
     q->type = this->val_type;
     ctx.current_block->quadruples.push_back(q);
-    write(ctx, out, identifier->text);
+    write(ctx, out, identifier->text, nullptr, nullptr);
 }
 
 void block_statement::write_intermediate(generation_context &ctx) {
@@ -182,7 +246,7 @@ void if_statement::write_intermediate(generation_context &ctx) {
 
 void for_statement::write_intermediate(generation_context &ctx) {
     auto iexp = initial_exp->write_intermediate(ctx);
-    write(ctx, iexp, initial_var->text);
+    write(ctx, iexp, initial_var->text, nullptr, nullptr);
     
     auto c1 = this->cond.exp1->write_intermediate(ctx);
     auto c2 = this->cond.exp2->write_intermediate(ctx);
