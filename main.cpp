@@ -72,16 +72,16 @@ int main() {
             }
             for (auto& v : ggc.variables) {
                 if (v.second.array == var_def::SCALAR_VAR) {
-                    code << v.first << ": .word " << v.second.value << std::endl;
+                    code << v.first << ":.align 2 \n.word " << v.second.value << std::endl;
                 } else if (v.second.array == var_def::ARRAY_1D || v.second.array == var_def::ARRAY_2D) {
                     if (v.second.initialization) {
-                        code << v.first << ":";
+                        code << v.first << ":.align 2\n";
                         for (auto init : *v.second.initialization) {
-                            code << " .word " << std::to_string(init) << std::endl;
+                            code << ".word " << std::to_string(init) << std::endl;
                         }
                         code << std::endl;
                     } else {
-                        code << v.first << ": .space " << v.second.get_size() * 4 << std::endl;
+                        code << v.first << ": .align 2 \n.space " << v.second.get_size() * 4 << std::endl;
                     }
                 } else if (v.second.array != var_def::CONST) {
                     throw std::logic_error("Fucked");
