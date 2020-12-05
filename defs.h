@@ -11,6 +11,7 @@
 struct expression {
     int line = -1;
     virtual ~expression() = default;
+    bool force_int = false;
     virtual std::shared_ptr<intermediate_variable> write_intermediate(generation_context& ctx) = 0;
 };
 

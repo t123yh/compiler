@@ -59,6 +59,9 @@ const char* parser::get_name() const {
 
 token_type_t get_expression_type(const expression* expr, parsing_context& ctx) {
     auto cond_type = INTTK;
+    if (expr->force_int) {
+        return INTTK;
+    }
     auto* t = dynamic_cast<const constant_expression*>(expr);
     if (t && t->type == CHARCON)
         cond_type = CHARTK;
