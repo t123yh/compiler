@@ -176,7 +176,9 @@ void empty_statement::write_intermediate(generation_context &ctx) {}
 
 void return_statement::write_intermediate(generation_context &ctx) {
     auto q = std::make_shared<return_exit>(ctx);
-    q->in_list.push_back(this->val->write_intermediate(ctx));
+    if (this->val) {
+        q->in_list.push_back(this->val->write_intermediate(ctx));
+    }
     ctx.current_block->eop = q;
     ctx.new_block();
 }
