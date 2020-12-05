@@ -103,7 +103,7 @@ struct statement_block {
 
 struct function {
     function_signature signature;
-    void populate_variables(generation_context& ctx);
+    void populate_parameters(generation_context& ctx);
     statement_block statements;
 };
 

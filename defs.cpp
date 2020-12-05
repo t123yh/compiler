@@ -279,7 +279,7 @@ void statement_block::generate_statements(generation_context& ctx) {
     }
 }
 
-void function::populate_variables(generation_context &ctx) {
+void function::populate_parameters(generation_context &ctx) {
     for (int i = 0; i < signature.parameters.size(); i++) {
         auto& p = signature.parameters[i];
         assert(p.array == var_def::PARAM);

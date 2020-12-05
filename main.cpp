@@ -48,7 +48,7 @@ int main() {
             
             for (auto& f : p.functions) {
                 generation_context func_ctx(ggc, f->signature.identifier->text);
-                f->populate_variables(func_ctx);
+                f->populate_parameters(func_ctx);
                 f->statements.populate_variables(func_ctx);
                 f->statements.generate_statements(func_ctx);
                 
