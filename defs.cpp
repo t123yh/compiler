@@ -24,7 +24,7 @@ std::shared_ptr<intermediate_variable> variable_access_expression::write_interme
             a->in_list.push_back(im1);
             a->out = v;
             if (def.array == var_def::ARRAY_2D) {
-                a->dimen = def.dimen1;
+                a->dimen = def.dimen2;
                 assert(this->idx2);
                 im2 = this->idx2->write_intermediate(ctx);
                 a->in_list.push_back(im2);
@@ -50,7 +50,7 @@ std::shared_ptr<intermediate_variable> variable_access_expression::write_interme
                 q->in_list.push_back(im1);
             }
             if (g->second.array == var_def::ARRAY_2D) {
-                q->dimen = g->second.dimen1;
+                q->dimen = g->second.dimen2;
                 assert(this->idx2);
                 auto im2 = this->idx2->write_intermediate(ctx);
                 q->in_list.push_back(im2);
@@ -115,7 +115,7 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
             if (def.array == var_def::ARRAY_2D) {
                 assert(idx2);
                 im2 = idx2->write_intermediate(ctx);
-                q->dimen = def.dimen1;
+                q->dimen = def.dimen2;
                 q->in_list.push_back(im2);
             }
             ctx.current_block->quadruples.push_back(q);
@@ -147,7 +147,7 @@ static void write(generation_context& ctx, const std::shared_ptr<intermediate_va
                 q->in_list.push_back(im1);
             }
             if (g->second.array == var_def::ARRAY_2D) {
-                q->dimen = g->second.dimen1;
+                q->dimen = g->second.dimen2;
                 assert(idx2);
                 auto im2 = idx2->write_intermediate(ctx);
                 q->in_list.push_back(im2);
