@@ -183,7 +183,10 @@ std::vector<token> tokenize(std::string orig, error_container &cont) {
             if (type == CHARCON_ERR)
                 type = CHARCON;
         }
-    
+   
+        if (type == IDENFR) {
+            std::transform(txt.begin(), txt.end(), txt.begin(), ::tolower);
+        }
     
         result.push_back(token{.type = type, .text = txt, .line = line, .column = pos - linestart});
         iter++;
