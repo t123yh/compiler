@@ -153,12 +153,12 @@ void if_statement::write_intermediate(generation_context &ctx) {
     l->comparator = this->cond.comparator;
     l->in_list.push_back(c1);
     l->in_list.push_back(c2);
-    std::shared_ptr<quadruple_block> cb = ctx.current_block;
-    cb->eop = l;
+    ctx.current_block->eop = l;
+    
     ctx.new_block();
     auto ib = ctx.current_block;
     this->if_body->write_intermediate(ctx);
-    cb->next_blocks.push_back(ib);
+    l->pass_block = ib;
     
     std::shared_ptr<quadruple_block> eb{};
     
@@ -166,18 +166,18 @@ void if_statement::write_intermediate(generation_context &ctx) {
         ctx.new_block();
         eb = ctx.current_block;
         this->else_body->write_intermediate(ctx);
-        cb->next_blocks.push_back(eb);
+        l->fail_block = eb;
     }
     
     ctx.new_block();
-    ib->eop = std::make_shared<jump_exit>(ctx);
-    ib->next_blocks.push_back(ctx.current_block);
+    auto ib_exit = std::make_shared<jump_exit>(ctx);
+    ib->eop = ib_exit;
+    ib_exit->next_block = ctx.current_block;
     if (!this->else_body) {
-        cb->next_blocks.push_back(ctx.current_block);
-    }
-    if (eb) {
-        eb->eop = std::make_shared<jump_exit>(ctx);
-        eb->next_blocks.push_back(ctx.current_block);
+        l->fail_block = ctx.current_block;
+    } else {
+        auto eb_exit = std::make_shared<jump_exit>(ctx);
+        eb_exit->next_block = ctx.current_block;
     }
 }
 
@@ -190,7 +190,22 @@ void switch_statement::write_intermediate(generation_context &ctx) {
 }
 
 void while_statement::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("While not implemented");
+    auto c1 = this->cond.exp1->write_intermediate(ctx);
+    auto c2 = this->cond.exp2->write_intermediate(ctx);
+    auto l = std::make_shared<condition_exit>(ctx);
+    l->comparator = this->cond.comparator;
+    l->in_list.push_back(c1);
+    l->in_list.push_back(c2);
+    ctx.current_block->eop = l;
+    
+    ctx.new_block();
+    auto ib = ctx.current_block;
+    this->body->write_intermediate(ctx);
+    l->pass_block = ib;
+    ib->eop = l;
+    
+    ctx.new_block();
+    l->fail_block = ctx.current_block;
 }
 
 void statement_block::populate_variables(generation_context &ctx) {

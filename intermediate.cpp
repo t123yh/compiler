@@ -190,8 +190,12 @@ void condition_exit::generate_mips(quadruple_block& blk, std::vector<std::string
         default:
             throw std::logic_error("Invalid comparator");
     }
-    output.push_back(instr + " $t8, $t9, " + blk.next_blocks[0].lock()->block_name);
-    output.push_back("j " + blk.next_blocks[1].lock()->block_name);
+    output.push_back(instr + " $t8, $t9, " + pass_block.lock()->block_name);
+    output.push_back("j " + fail_block.lock()->block_name);
+}
+
+std::vector<std::weak_ptr<quadruple_block>> condition_exit::get_next_blocks() {
+    return {pass_block, fail_block};
 }
 
 void return_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &output) {
@@ -207,6 +211,14 @@ void return_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &
     output.emplace_back("jr $ra");
 }
 
+std::vector<std::weak_ptr<quadruple_block>> return_exit::get_next_blocks() {
+    return {};
+}
+
 void jump_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &output) {
-    output.push_back("j " + blk.next_blocks[0].lock()->block_name);
+    output.push_back("j " + next_block.lock()->block_name);
+}
+
+std::vector<std::weak_ptr<quadruple_block>> jump_exit::get_next_blocks() {
+    return {next_block};
 }

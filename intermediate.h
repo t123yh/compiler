@@ -122,34 +122,40 @@ struct exit_op {
     std::vector<std::shared_ptr<intermediate_variable>> in_list;
     exit_op(generation_context& ctx): ctx(ctx){}
     virtual void generate_mips(quadruple_block& blk, std::vector<std::string> &output) = 0;
+    virtual std::vector<std::weak_ptr<quadruple_block>> get_next_blocks() = 0;
 };
 
 struct condition_exit : exit_op {
     condition_exit(generation_context& ctx) : exit_op(ctx){}
     token_type_t comparator;
+    std::weak_ptr<quadruple_block> pass_block, fail_block;
     void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+    std::vector<std::weak_ptr<quadruple_block>> get_next_blocks() override;
 };
 
 struct switch_exit : exit_op {
     switch_exit(generation_context& ctx) : exit_op(ctx){}
-    std::vector<int64_t> value_table;
+    std::vector<std::pair<int64_t, std::weak_ptr<quadruple_block>>> value_table;
     void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+    std::vector<std::weak_ptr<quadruple_block>> get_next_blocks() override;
 };
 
 struct jump_exit : exit_op {
     jump_exit(generation_context& ctx) : exit_op(ctx){}
+    std::weak_ptr<quadruple_block> next_block;
     void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+    std::vector<std::weak_ptr<quadruple_block>> get_next_blocks() override;
 };
 
 struct return_exit : exit_op {
     return_exit(generation_context& ctx) : exit_op(ctx){}
     void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
+    std::vector<std::weak_ptr<quadruple_block>> get_next_blocks() override;
 };
 
 struct quadruple_block {
     std::string block_name;
     std::vector<std::shared_ptr<quadruple>> quadruples;
-    std::vector<std::weak_ptr<quadruple_block>> next_blocks;
     std::shared_ptr<exit_op> eop;
     
     generation_context& ctx;
