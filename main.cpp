@@ -83,7 +83,7 @@ int main() {
                     } else {
                         code << v.first << ": .space " << v.second.get_size() * 4 << std::endl;
                     }
-                } else {
+                } else if (v.second.array == var_def::CONST) {
                     throw std::logic_error("Fucked");
                 }
             }

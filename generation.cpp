@@ -67,7 +67,7 @@ void generation_context::assign_stack_space() {
             idx += def.get_size();
         } else if (t == intermediate_variable::parameter) {
             std::get<1>(v.second)->stack_offset = stack_depth() + std::get<1>(v.second)->parameter_index * 4;
-        } else {
+        } else if (t != intermediate_variable::constant) {
             throw std::logic_error("FUCKED");
         }
     }
