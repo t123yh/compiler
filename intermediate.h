@@ -136,6 +136,7 @@ struct condition_exit : exit_op {
 struct switch_exit : exit_op {
     switch_exit(generation_context& ctx) : exit_op(ctx){}
     std::vector<std::pair<int64_t, std::weak_ptr<quadruple_block>>> value_table;
+    std::weak_ptr<quadruple_block> default_block;
     void generate_mips(quadruple_block& blk, std::vector<std::string> &output) override;
     std::vector<std::weak_ptr<quadruple_block>> get_next_blocks() override;
 };

@@ -156,28 +156,27 @@ void if_statement::write_intermediate(generation_context &ctx) {
     ctx.current_block->eop = l;
     
     ctx.new_block();
-    auto ib = ctx.current_block;
+    l->pass_block = ctx.current_block;
     this->if_body->write_intermediate(ctx);
-    l->pass_block = ib;
+    auto ib = ctx.current_block;
     
     std::shared_ptr<quadruple_block> eb{};
     
     if (this->else_body) {
         ctx.new_block();
-        eb = ctx.current_block;
+        l->fail_block = ctx.current_block;
         this->else_body->write_intermediate(ctx);
-        l->fail_block = eb;
+        eb = ctx.current_block;
     }
     
     ctx.new_block();
-    auto ib_exit = std::make_shared<jump_exit>(ctx);
-    ib->eop = ib_exit;
-    ib_exit->next_block = ctx.current_block;
-    if (!this->else_body) {
+    auto exit = std::make_shared<jump_exit>(ctx);
+    exit->next_block = ctx.current_block;
+    ib->eop = exit;
+    if (!eb) {
         l->fail_block = ctx.current_block;
     } else {
-        auto eb_exit = std::make_shared<jump_exit>(ctx);
-        eb_exit->next_block = ctx.current_block;
+        eb->eop = exit;
     }
 }
 
@@ -195,6 +194,7 @@ void for_statement::write_intermediate(generation_context &ctx) {
     
     ctx.new_block();
     auto ib = ctx.current_block;
+    l->pass_block = ib;
     this->body->write_intermediate(ctx);
     
     auto v1 = std::make_shared<variable_access_expression>();
@@ -208,15 +208,44 @@ void for_statement::write_intermediate(generation_context &ctx) {
     ass->val = cexp;
     ass->write_intermediate(ctx);
     
-    l->pass_block = ib;
-    ib->eop = l;
+    ctx.current_block->eop = l;
     
     ctx.new_block();
     l->fail_block = ctx.current_block;
 }
 
 void switch_statement::write_intermediate(generation_context &ctx) {
-    throw std::logic_error("Switch not implemented");
+    auto val = this->exp->write_intermediate(ctx);
+    auto l = std::make_shared<switch_exit>(ctx);
+    l->in_list.push_back(val);
+    ctx.current_block->eop = l;
+    
+    std::vector<std::shared_ptr<quadruple_block>> blocks{};
+    for (auto& cond : conditions) {
+        ctx.new_block();
+        l->value_table.emplace_back(cond.val, ctx.current_block);
+        
+        cond.body->write_intermediate(ctx);
+        
+        blocks.push_back(ctx.current_block);
+    }
+    
+    if (default_body) {
+        ctx.new_block();
+        l->default_block = ctx.current_block;
+        default_body->write_intermediate(ctx);
+        blocks.push_back(ctx.current_block);
+    }
+    
+    ctx.new_block();
+    if (!default_body) {
+        l->default_block = ctx.current_block;
+    }
+    auto exit = std::make_shared<jump_exit>(ctx);
+    exit->next_block = ctx.current_block;
+    for (const auto& b : blocks) {
+        b->eop = exit;
+    }
 }
 
 void while_statement::write_intermediate(generation_context &ctx) {
@@ -229,12 +258,9 @@ void while_statement::write_intermediate(generation_context &ctx) {
     ctx.current_block->eop = l;
     
     ctx.new_block();
-    auto ib = ctx.current_block;
+    l->pass_block = ctx.current_block;
     this->body->write_intermediate(ctx);
-    
-    
-    l->pass_block = ib;
-    ib->eop = l;
+    ctx.current_block->eop = l;
     
     ctx.new_block();
     l->fail_block = ctx.current_block;

@@ -83,6 +83,8 @@ int main() {
             }
             asm("nop");
             // generation_context ctx;
+        } else {
+            throw parsing_failure("has " + std::to_string(errs.size()) + " errors!");
         }
         
     } catch (parsing_failure& pf) {

@@ -9,7 +9,7 @@
 void generation_context::new_block() {
     block_id++;
     auto nb = std::make_shared<quadruple_block>(*this);
-    nb->block_name = this->name + "_b_" + std::to_string(block_id);
+    nb->block_name = "func_" + this->name + "_b_" + std::to_string(block_id);
     this->blocks.push_back(nb);
     this->current_block = nb;
 }

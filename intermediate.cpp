@@ -222,3 +222,25 @@ void jump_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &ou
 std::vector<std::weak_ptr<quadruple_block>> jump_exit::get_next_blocks() {
     return {next_block};
 }
+
+std::vector<std::weak_ptr<quadruple_block>> switch_exit::get_next_blocks() {
+    std::vector<std::weak_ptr<quadruple_block>> ret;
+    for (auto& b : value_table) {
+        ret.push_back(b.second);
+    }
+    ret.push_back(default_block);
+    return ret;
+}
+
+void switch_exit::generate_mips(quadruple_block &blk, std::vector<std::string> &output) {
+    if (in_list[0]->type == intermediate_variable::constant) {
+        output.push_back("li $t8, " + std::to_string(in_list[0]->const_value));
+    } else {
+        output.push_back("lw $t8, " + std::to_string(in_list[0]->stack_offset) + "($sp)");
+    }
+    
+    for (auto& c : value_table) {
+        output.push_back("beq $t8, " + std::to_string(c.first) + ", " + c.second.lock()->block_name);
+    }
+    output.push_back("j " + default_block.lock()->block_name);
+}
